@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import localFont from "next/font/local";
 import "./globals.css";
 import { FloatingNav } from "./components/ui/FloatingNavbar";
@@ -17,8 +18,8 @@ const geistMono = localFont({
 });
 
 const navItems = [
-  { name: "Home", link: "#" },
-  { name: "Browse", link: "#" },
+  { name: "Home", link: "/" },
+  { name: "Browse", link: "/#browse" },
 ];
 
 export default function RootLayout({
@@ -26,6 +27,12 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const pathname = usePathname();
+
+  // Define routes where the navbar should not appear
+  const noNavRoutes = ["/auth/login", "/auth/register"];
+  const shouldShowNavbar = !noNavRoutes.includes(pathname);
+
   return (
     <html lang="en">
       <head>
@@ -38,7 +45,8 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <SessionProvider>
-          <FloatingNav navItems={navItems} className="navbar" />
+          {/* Conditionally render the navbar */}
+          {shouldShowNavbar && <FloatingNav navItems={navItems} className="navbar" />}
           {children}
         </SessionProvider>
       </body>

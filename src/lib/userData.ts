@@ -4,17 +4,19 @@ interface User {
   id: string;
   email: string;
   password: string;
+  name: string; // Include name property
 }
 
 const users: User[] = []; // Shared in-memory user database
 
 /**
  * Add a new user to the database.
+ * @param name - User's name.
  * @param email - User's email.
  * @param password - Plain text password.
  * @returns The created user object.
  */
-export async function addUser(email: string, password: string): Promise<User> {
+export async function addUser(name: string, email: string, password: string): Promise<User> {
   // Check if the user already exists
   const existingUser = users.find((user) => user.email === email);
   if (existingUser) {
@@ -27,8 +29,9 @@ export async function addUser(email: string, password: string): Promise<User> {
   // Create the new user
   const newUser: User = {
     id: String(users.length + 1),
+    name, // Store the name
     email,
-    password: hashedPassword,
+    password: hashedPassword, // Store the hashed password
   };
 
   // Add to the shared users array

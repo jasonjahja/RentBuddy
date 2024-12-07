@@ -1,4 +1,3 @@
-import Head from "next/head";
 import {
     IconArrowWaveRightUp,
     IconBoxAlignRightFilled,
@@ -8,8 +7,8 @@ import {
     IconSignature,
     IconTableColumn,
   } from "@tabler/icons-react";
-
-const items = [
+  
+  export const items = [
     {
       title: "Mountain Bike",
       description: "A rugged bike perfect for off-road adventures and mountain trails.",
@@ -88,56 +87,4 @@ const items = [
       url: "hero2.png",
     },
   ];
-
-export async function getStaticPaths() {
-  const paths = items.map((item) => ({
-    params: { slug: item.title.replace(/\s+/g, "-").toLowerCase() },
-  }));
-
-  return { paths, fallback: "blocking" };
-}
-
-
-export async function getStaticProps({ params }: { params: { slug: string } }) {
-  const item = items.find(
-    (i) => i.title.replace(/\s+/g, "-").toLowerCase() === params.slug
-  );
-
-  return {
-    props: { item },
-  };
-}
-
-export default function ItemDetail({ item }: { item: typeof items[0] }) {
-  if (!item) {
-    return <p>Loading...</p>;
-  }
-
-  return (
-    <>
-      <Head>
-        <title>{item.title}</title>
-        <meta name="description" content={item.description} />
-      </Head>
-      <div className="min-h-screen bg-gray-100">
-        <header className="bg-blue-500 text-white py-12 text-center">
-          <h1 className="text-4xl font-bold">{item.title}</h1>
-          <p className="text-lg mt-4">{item.description}</p>
-        </header>
-        <main className="container mx-auto px-4 py-16">
-          <div className="aspect-video w-full mb-8 overflow-hidden rounded-xl">
-            <img src={item.url} alt={item.title} className="w-full h-full object-cover" />
-          </div>
-          <p className="text-gray-700 text-lg leading-relaxed">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin nec magna nulla. 
-            Vivamus pharetra lorem a fermentum elementum. Integer suscipit ex id orci 
-            tincidunt gravida.
-          </p>
-        </main>
-        <footer className="bg-gray-800 text-white py-8 text-center">
-          <p>&copy; 2024 RentBuddy. All rights reserved.</p>
-        </footer>
-      </div>
-    </>
-  );
-}
+  

@@ -14,7 +14,7 @@ import {
 import Link from "next/link";
 
 const images = ["hero1.png", "hero2.png", "hero3.jpg"];
-const items = [
+export const items = [
   {
     title: "Mountain Bike",
     description: "A rugged bike perfect for off-road adventures and mountain trails.",
@@ -155,7 +155,7 @@ export default function Home() {
     return (
       <Link 
         key={i} 
-        href={`/pages/${slug}`}
+        href={`/${slug}`}
         className="contents"
       >
         <BentoGridItem
