@@ -1,25 +1,28 @@
-import {
-    IconArrowWaveRightUp,
-    IconBoxAlignRightFilled,
-    IconBoxAlignTopLeft,
-    IconClipboardCopy,
-    IconFileBroken,
-    IconSignature,
-    IconTableColumn,
-  } from "@tabler/icons-react";
+  export interface Review {
+    user: string;
+    comment: string;
+    rating: number;
+  }
   
-  export const items = [
-    {
-      title: "Mountain Bike",
-      description: "A rugged bike perfect for off-road adventures and mountain trails.",
-      price: 499.99,
-      reviews: [
-        { user: "Alice", comment: "Great bike for the price!", rating: 5 },
-        { user: "Bob", comment: "Handles rough terrain like a champ.", rating: 4 },
-      ],
-      icon: <IconClipboardCopy className="h-4 w-4 text-neutral-500" />,
-      url: "hero2.png",
-    },
+  export interface Item {
+    title: string;
+    description: string;
+    price: number;
+    reviews: Review[]; 
+    url: string;
+  }
+  
+  export const items: Item[] = [
+  {
+    title: "Mountain Bike",
+    description: "A rugged bike perfect for off-road adventures and mountain trails.",
+    price: 499.99,
+    reviews: [
+      { user: "Alice", comment: "Great bike for the price!", rating: 5 },
+      { user: "Bob", comment: "Handles rough terrain like a champ.", rating: 4 },
+    ], 
+    url: "hero2.png",
+  },
     {
       title: "DSLR Camera",
       description: "A professional-grade camera for capturing stunning photos and videos.",
@@ -28,7 +31,6 @@ import {
         { user: "Charlie", comment: "Amazing image quality!", rating: 5 },
         { user: "Dana", comment: "Perfect for both beginners and pros.", rating: 5 },
       ],
-      icon: <IconFileBroken className="h-4 w-4 text-neutral-500" />,
       url: "hero2.png",
     },
     {
@@ -39,7 +41,6 @@ import {
         { user: "Ella", comment: "Very easy to set up.", rating: 5 },
         { user: "Finn", comment: "Kept us dry during heavy rain.", rating: 4 },
       ],
-      icon: <IconSignature className="h-4 w-4 text-neutral-500" />,
       url: "hero2.png",
     },
     {
@@ -50,7 +51,6 @@ import {
         { user: "Grace", comment: "Battery life is outstanding.", rating: 5 },
         { user: "Henry", comment: "Fast performance and great camera.", rating: 5 },
       ],
-      icon: <IconTableColumn className="h-4 w-4 text-neutral-500" />,
       url: "hero2.png",
     },
     {
@@ -61,7 +61,6 @@ import {
         { user: "Isla", comment: "Super convenient for city commutes.", rating: 5 },
         { user: "Jack", comment: "Great range and speed.", rating: 4 },
       ],
-      icon: <IconArrowWaveRightUp className="h-4 w-4 text-neutral-500" />,
       url: "hero2.png",
     },
     {
@@ -72,7 +71,6 @@ import {
         { user: "Kim", comment: "Runs all the latest games flawlessly.", rating: 5 },
         { user: "Leo", comment: "Fantastic display and build quality.", rating: 5 },
       ],
-      icon: <IconBoxAlignTopLeft className="h-4 w-4 text-neutral-500" />,
       url: "hero2.png",
     },
     {
@@ -83,7 +81,6 @@ import {
         { user: "Mia", comment: "Great sound quality and easy to play.", rating: 5 },
         { user: "Noah", comment: "Affordable yet premium feel.", rating: 5 },
       ],
-      icon: <IconBoxAlignRightFilled className="h-4 w-4 text-neutral-500" />,
       url: "hero2.png",
     },
   ];

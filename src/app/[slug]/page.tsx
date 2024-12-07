@@ -1,7 +1,8 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { items } from "../page";
+import { items } from "../../data/items";
+import Image from "next/image";
 
 export default function ItemDetailPage() {
   const { slug } = useParams();
@@ -23,11 +24,13 @@ export default function ItemDetailPage() {
         <div className="flex flex-col md:flex-row gap-6">
           {/* Image Section */}
           <div className="flex-shrink-0 w-full md:w-1/2 h-96 bg-gray-200 rounded-lg overflow-hidden">
-            <img
-              src={item.url}
-              alt={item.title}
-              className="w-full h-full object-cover"
-            />
+            <Image 
+                src={item.url}
+                alt={item.title}
+                width={1920} 
+                height={1080} 
+                className="w-full h-full object-cover" 
+              />
           </div>
 
           {/* Item Details Section */}

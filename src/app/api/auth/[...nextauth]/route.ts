@@ -1,8 +1,10 @@
-import NextAuth, { AuthOptions } from "next-auth";
+import NextAuth from "next-auth";
+import { AuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { validateUser } from "../../../../lib/userData";
 
-export const authOptions: AuthOptions = {
+// Internal authOptions object
+const authOptions: AuthOptions = {
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -10,10 +12,8 @@ export const authOptions: AuthOptions = {
         email: { label: "Email", type: "text" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
-        console.log("Credentials received:", credentials);
-
-        if (!credentials || !credentials.email || !credentials.password) {
+      async authorize(credentials: Record<"email" | "password", string> | undefined) {
+        if (!credentials?.email || !credentials?.password) {
           console.error("Missing email or password");
           return null;
         }
@@ -24,35 +24,35 @@ export const authOptions: AuthOptions = {
           return null;
         }
 
-        console.log("Authorized user:", user);
-        return { id: user.id, email: user.email, name: user.name }; // Return the user object
+        return { id: user.id, email: user.email, name: user.name };
       },
     }),
   ],
   session: {
-    strategy: "jwt", // JWT for session management
+    strategy: "jwt",
   },
-  secret: process.env.JWT_SECRET || "default_jwt_secret", // Add fallback for development
+  secret: process.env.JWT_SECRET || "default_jwt_secret",
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
         token.email = user.email;
-        token.name = user.name; // Include name in the token
+        token.name = user.name;
       }
       return token;
     },
     async session({ session, token }) {
       session.user = {
-        id: token.id as string, // Map id from token
+        id: token.id as string,
         email: token.email,
-        name: token.name, // Map name from token
+        name: token.name,
       };
       return session;
     },
   },
 };
 
+// Handler
 const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST };
