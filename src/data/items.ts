@@ -21,7 +21,7 @@
       { user: "Alice", comment: "Great bike for the price!", rating: 5 },
       { user: "Bob", comment: "Handles rough terrain like a champ.", rating: 4 },
     ], 
-    url: "hero2.png",
+    url: "/images/hero2.png",
   },
     {
       title: "DSLR Camera",
@@ -31,7 +31,7 @@
         { user: "Charlie", comment: "Amazing image quality!", rating: 5 },
         { user: "Dana", comment: "Perfect for both beginners and pros.", rating: 5 },
       ],
-      url: "hero2.png",
+      url: "/images/hero2.png",
     },
     {
       title: "Camping Tent",
@@ -41,7 +41,7 @@
         { user: "Ella", comment: "Very easy to set up.", rating: 5 },
         { user: "Finn", comment: "Kept us dry during heavy rain.", rating: 4 },
       ],
-      url: "hero2.png",
+      url: "/images/hero2.png",
     },
     {
       title: "Smartphone",
@@ -51,7 +51,7 @@
         { user: "Grace", comment: "Battery life is outstanding.", rating: 5 },
         { user: "Henry", comment: "Fast performance and great camera.", rating: 5 },
       ],
-      url: "hero2.png",
+      url: "/images/hero2.png",
     },
     {
       title: "Electric Scooter",
@@ -61,7 +61,7 @@
         { user: "Isla", comment: "Super convenient for city commutes.", rating: 5 },
         { user: "Jack", comment: "Great range and speed.", rating: 4 },
       ],
-      url: "hero2.png",
+      url: "/images/hero2.png",
     },
     {
       title: "Gaming Laptop",
@@ -71,7 +71,7 @@
         { user: "Kim", comment: "Runs all the latest games flawlessly.", rating: 5 },
         { user: "Leo", comment: "Fantastic display and build quality.", rating: 5 },
       ],
-      url: "hero2.png",
+      url: "/images/hero2.png",
     },
     {
       title: "Acoustic Guitar",
@@ -81,7 +81,7 @@
         { user: "Mia", comment: "Great sound quality and easy to play.", rating: 5 },
         { user: "Noah", comment: "Affordable yet premium feel.", rating: 5 },
       ],
-      url: "hero2.png",
+      url: "/images/hero2.png",
     },
   ];
   

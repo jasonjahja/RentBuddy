@@ -27,9 +27,9 @@ export default function ItemDetailPage() {
             <Image 
                 src={item.url}
                 alt={item.title}
-                width={1920} 
-                height={1080} 
-                className="w-full h-full object-cover" 
+                style={{ objectFit: "cover" }}
+                width={800} // Adjust these values as needed
+                height={800}
               />
           </div>
 

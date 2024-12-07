@@ -6,9 +6,7 @@ import { items } from "../data/items";
 import Link from "next/link";
 import Image from "next/image";
 
-const images = ["hero1.png", "hero2.png", "hero3.jpg"];
-
-
+const images = ["/images/hero1.png", "/images/hero2.png", "/images/hero3.jpg"];
 
 export default function Home() {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -81,9 +79,9 @@ export default function Home() {
               <Image 
                 src={item.url}
                 alt={item.title}
-                width={1920} 
-                height={1080} 
-                className="w-full h-full object-cover" 
+                style={{ objectFit: "cover" }}
+                width={800}
+                height={400}
               />
             </div>
           }
