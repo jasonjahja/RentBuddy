@@ -3,19 +3,37 @@ import { addUser } from "../../../../lib/userData";
 
 export async function POST(request: Request) {
   try {
-    const { username, email, password } = await request.json();
+    const { username, email, password, role } = await request.json();
 
-    if (!username || !email || !password) {
+    if (!username || !email || !password || !role) {
       return NextResponse.json(
-        { error: "Username, email, and password are required." },
+        { error: "Username, email, password, and role are required." },
         { status: 400 }
       );
     }
 
-    const newUser = await addUser(username, email, password);
+    // Validate role
+    if (role !== "renter" && role !== "owner") {
+      return NextResponse.json(
+        { error: "Role must be either 'renter' or 'owner'." },
+        { status: 400 }
+      );
+    }
+
+    // Add user with role
+    const newUser = await addUser(username, email, password, role);
 
     return NextResponse.json(
-      { message: "User registered successfully.", user: newUser },
+      {
+        message: "User registered successfully.",
+        user: {
+          id: newUser.id,
+          username: newUser.username,
+          email: newUser.email,
+          role: newUser.role,
+          trust_score: newUser.trust_score || null, // Only if role is renter
+        },
+      },
       { status: 201 }
     );
   } catch (error) {

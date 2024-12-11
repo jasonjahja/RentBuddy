@@ -8,10 +8,11 @@ generator client {
 }
 
 model User {
-  id        Int     @id @default(autoincrement())
-  username  String  @unique
-  email     String  @unique
-  password  String  // Include this field for hashed passwords
-  createdAt DateTime @default(now())
+  id          Int     @id @default(autoincrement())
+  username    String  @unique
+  email       String  @unique
+  password    String
+  role        String
+  trust_score Int?
 }
 

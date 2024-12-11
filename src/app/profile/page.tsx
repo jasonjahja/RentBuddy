@@ -11,7 +11,10 @@ export default function ProfilePage() {
   if (status === "loading") {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-tr from-blue-50 to-gray-100">
-        <p className="text-gray-700 text-lg">Loading...</p>
+        <div className="flex items-center space-x-2 text-gray-700">
+          <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-600"></div>
+          <p>Loading...</p>
+        </div>
       </div>
     );
   }
@@ -25,7 +28,8 @@ export default function ProfilePage() {
     await signOut({ callbackUrl: "/auth/login" }); // Redirect to login after signing out
   };
 
-  // Display user information and logout button
+  const { username, email, role, trust_score } = session.user || {};
+
   return (
     <div className="min-h-screen bg-gradient-to-tr from-blue-50 to-gray-100 flex items-center justify-center px-4">
       <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-lg">
@@ -33,17 +37,38 @@ export default function ProfilePage() {
           Profile
         </h1>
         <p className="text-center text-gray-600 mb-8">
-          Welcome, <span className="font-bold">{session.user?.username || "User"}</span>!
+          Welcome,{" "}
+          <span className="font-bold">{username || "User"}!</span>
         </p>
         <ul className="text-gray-700 text-sm leading-6 space-y-2 mb-8">
           <li>
             <span className="font-semibold text-gray-800">Username:</span>{" "}
-            {session.user?.username || "N/A"}
+            {username || "N/A"}
           </li>
           <li>
             <span className="font-semibold text-gray-800">Email:</span>{" "}
-            {session.user?.email}
+            {email || "N/A"}
           </li>
+          {role && (
+            <li>
+              <span className="font-semibold text-gray-800">Role:</span>{" "}
+              <span
+                className={`font-bold ${
+                  role === "renter" ? "text-blue-600" : "text-green-600"
+                }`}
+              >
+                {role}
+              </span>
+            </li>
+          )}
+          {role === "renter" && trust_score !== undefined && (
+            <li>
+              <span className="font-semibold text-gray-800">Trust Score:</span>{" "}
+              <span className="font-bold text-yellow-600">
+                {trust_score}
+              </span>
+            </li>
+          )}
         </ul>
         <div className="space-y-4">
           <button

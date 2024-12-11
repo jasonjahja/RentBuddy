@@ -8,9 +8,15 @@ const prisma = new PrismaClient();
  * @param username - User's username.
  * @param email - User's email.
  * @param password - Plain text password.
+ * @param role - User's role ("renter" or "owner").
  * @returns The created user object.
  */
-export async function addUser(username: string, email: string, password: string) {
+export async function addUser(
+  username: string,
+  email: string,
+  password: string,
+  role: "renter" | "owner"
+) {
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -19,6 +25,8 @@ export async function addUser(username: string, email: string, password: string)
         username,
         email,
         password: hashedPassword,
+        role,
+        trust_score: role === "renter" ? 100 : null, // Default trust score for renters
       },
     });
 
@@ -43,7 +51,6 @@ export async function addUser(username: string, email: string, password: string)
   }
 }
 
-
 /**
  * Validate a user's credentials.
  * @param email - User's email.
@@ -62,6 +69,20 @@ export async function validateUser(email: string, password: string) {
   }
 
   return user; // Valid user
+}
+
+/**
+ * Update the trust score for a user.
+ * @param userId - The user's ID.
+ * @param trustScore - The new trust score value.
+ * @returns The updated user object.
+ */
+export async function updateTrustScore(userId: string, trustScore: number) {
+  const updatedUser = await prisma.user.update({
+    where: { id: Number(userId) }, // Convert string to number
+    data: { trust_score: trustScore },
+  });
+  return updatedUser;
 }
 
 /**

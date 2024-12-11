@@ -10,6 +10,7 @@ export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [role, setRole] = useState("renter");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState({
@@ -17,6 +18,7 @@ export default function Register() {
     email: "",
     password: "",
     confirmPassword: "",
+    role: "",
   });
   const [message, setMessage] = useState("");
 
@@ -30,6 +32,7 @@ export default function Register() {
       email: "",
       password: "",
       confirmPassword: "",
+      role: "",
     };
 
     if (!username) {
@@ -44,26 +47,28 @@ export default function Register() {
     if (password !== confirmPassword) {
       newErrors.confirmPassword = "Passwords do not match.";
     }
+    if (!role) {
+      newErrors.role = "Role selection is required.";
+    }
 
     if (Object.values(newErrors).some((error) => error !== "")) {
       setErrors(newErrors);
       return;
     }
 
-    setErrors({ username: "", email: "", password: "", confirmPassword: "" });
+    setErrors({ username: "", email: "", password: "", confirmPassword: "", role: "" });
 
     const response = await fetch("/api/auth/register", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ username, email, password }),
+      body: JSON.stringify({ username, email, password, role }),
     });
 
     const data = await response.json();
 
     if (response.ok) {
-      // Automatically log the user in
       const signInResponse = await signIn("credentials", {
         redirect: false,
         email,
@@ -172,6 +177,21 @@ export default function Register() {
             {errors.confirmPassword && (
               <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>
             )}
+          </div>
+          <div className="mb-6">
+            <label htmlFor="role" className="block text-sm font-medium text-gray-700">
+              Role
+            </label>
+            <select
+              id="role"
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              className="w-full px-4 py-2 mt-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="renter">Renter</option>
+              <option value="owner">Owner</option>
+            </select>
+            {errors.role && <p className="text-red-500 text-xs mt-1">{errors.role}</p>}
           </div>
           <button
             type="submit"

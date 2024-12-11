@@ -2,7 +2,6 @@ import NextAuth, { AuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { validateUser } from "../../../../lib/userData";
 
-// Internal authOptions object
 const authOptions: AuthOptions = {
   providers: [
     CredentialsProvider({
@@ -24,8 +23,21 @@ const authOptions: AuthOptions = {
           return null;
         }
 
-        // Convert id to string to match next-auth User type
-        return { id: String(user.id), email: user.email, username: user.username };
+        // Ensure role is of type "renter" | "owner"
+        const role = user.role as "renter" | "owner";
+        if (role !== "renter" && role !== "owner") {
+          console.error("Invalid role in user data:", user.role);
+          return null;
+        }
+
+        // Include role and trust_score (if renter)
+        return {
+          id: String(user.id),
+          email: user.email,
+          username: user.username,
+          role,
+          trust_score: role === "renter" ? user.trust_score ?? undefined : undefined, // Ensure trust_score is undefined if null
+        };
       },
     }),
   ],
@@ -40,6 +52,8 @@ const authOptions: AuthOptions = {
         token.id = user.id;
         token.email = user.email;
         token.username = user.username;
+        token.role = user.role;
+        token.trust_score = user.trust_score ?? undefined; // Ensure trust_score is undefined if null
       }
       return token;
     },
@@ -49,6 +63,8 @@ const authOptions: AuthOptions = {
         id: token.id as string,
         email: token.email as string,
         username: token.username as string,
+        role: token.role as "renter" | "owner",
+        trust_score: token.trust_score, // trust_score will now be undefined if not applicable
       };
       return session;
     },
