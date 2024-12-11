@@ -48,7 +48,7 @@ export default function Home() {
               Empowering communities, one rental at a time.
             </p>
             <a
-              href="#browse"
+              href="/browse"
               className="bg-white text-blue-500 px-8 py-4 rounded-full shadow-lg font-semibold hover:bg-gray-100 transition"
             >
               Start Exploring
@@ -60,38 +60,46 @@ export default function Home() {
         {/* Browse Items Section */}
         <section id="browse" className="py-16 bg-white">
           <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center mb-8">Browse Items</h2>
-            <BentoGrid>
-  {items.map((item, i) => {
-    const slug = item.title.replace(/\s+/g, '-').toLowerCase();
-    console.log("Generated slug:", slug); // Tambahkan log ini
-    return (
-      <Link 
-        key={i} 
-        href={`/${slug}`}
-        className="contents"
-      >
-        <BentoGridItem
-          title={item.title}
-          description={item.description}
-          header={
-            <div className="aspect-video w-full overflow-hidden rounded-xl">
-              <Image 
-                src={item.url}
-                alt={item.title}
-                style={{ objectFit: "cover" }}
-                width={800}
-                height={400}
-              />
+            <div className="flex justify-between items-center mb-8 mx-4">
+              <h2 className="text-3xl font-bold">Browse Items</h2>
+              <Link
+                href="/browse"
+                className="text-blue-500 hover:underline font-semibold"
+              >
+                View All
+              </Link>
             </div>
-          }
-          className={i === 3 || i === 6 ? "md:col-span-2" : ""}
-        />
-      </Link>
-    );
-  })}
-</BentoGrid>
-
+            <BentoGrid>
+              {items.map((item, i) => {
+                const slug = item.title.replace(/\s+/g, '-').toLowerCase();
+                return (
+                  <Link 
+                    key={i} 
+                    href={`/${slug}`}
+                    className="contents"
+                  >
+                    <BentoGridItem
+                      category={item.category}
+                      title={item.title}
+                      description={item.description}
+                      status={item.isAvailable}
+                      header={
+                        <div className="aspect-video w-full overflow-hidden rounded-xl">
+                          <Image 
+                            src={item.url}
+                            alt={item.title}
+                            style={{ objectFit: "cover", objectPosition: "center" }}
+                            width={800}
+                            height={400}
+                          />
+                        </div>
+                      }
+                      className={i === 3 || i === 6 ? "md:col-span-2" : ""}
+                    />
+                  </Link>
+                );
+              })}
+            </BentoGrid>
           </div>
         </section>
       </main>

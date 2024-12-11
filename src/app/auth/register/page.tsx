@@ -2,42 +2,90 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 
 export default function Register() {
-  const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [errors, setErrors] = useState({
+    username: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
   const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
+
+  const router = useRouter();
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
+    const newErrors = {
+      username: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    };
+
+    if (!username) {
+      newErrors.username = "Username is required.";
+    }
+    if (!email) {
+      newErrors.email = "Email is required.";
+    }
+    if (!password) {
+      newErrors.password = "Password is required.";
+    }
     if (password !== confirmPassword) {
-      setError("Passwords do not match.");
-      setMessage("");
+      newErrors.confirmPassword = "Passwords do not match.";
+    }
+
+    if (Object.values(newErrors).some((error) => error !== "")) {
+      setErrors(newErrors);
       return;
     }
+
+    setErrors({ username: "", email: "", password: "", confirmPassword: "" });
 
     const response = await fetch("/api/auth/register", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify({ username, email, password }),
     });
 
     const data = await response.json();
 
     if (response.ok) {
-      setMessage(data.message);
-      setError("");
+      // Automatically log the user in
+      const signInResponse = await signIn("credentials", {
+        redirect: false,
+        email,
+        password,
+      });
+
+      if (signInResponse?.ok) {
+        router.push("/"); // Redirect to home on success
+      } else {
+        setMessage("");
+        setErrors((prev) => ({
+          ...prev,
+          email: "Registration successful, but login failed. Try logging in manually.",
+        }));
+      }
     } else {
       setMessage("");
-      setError(data.error);
+      setErrors((prev) => ({
+        ...prev,
+        email: data.error.includes("email") ? data.error : prev.email,
+        username: data.error.includes("username") ? data.error : prev.username,
+      }));
     }
   };
 
@@ -45,35 +93,28 @@ export default function Register() {
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-md">
         <h1 className="text-2xl font-bold text-center mb-6">Create an Account</h1>
-        {error && (
-          <p className="mb-4 text-center text-red-600 font-medium">{error}</p>
-        )}
         {message && (
           <p className="mb-4 text-center text-green-600 font-medium">{message}</p>
         )}
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label
-              htmlFor="name"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Full Name
+            <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+              Username
             </label>
             <input
-              id="name"
+              id="username"
               type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               className="w-full px-4 py-2 mt-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter your full name"
+              placeholder="Enter your username"
             />
+            {errors.username && (
+              <p className="text-red-500 text-xs mt-1">{errors.username}</p>
+            )}
           </div>
           <div className="mb-4">
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-gray-700"
-            >
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
               Email Address
             </label>
             <input
@@ -81,16 +122,15 @@ export default function Register() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              required
               className="w-full px-4 py-2 mt-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Enter your email"
             />
+            {errors.email && (
+              <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+            )}
           </div>
           <div className="mb-4 relative">
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-700"
-            >
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
               Password
             </label>
             <input
@@ -98,7 +138,6 @@ export default function Register() {
               type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              required
               className="w-full px-4 py-2 mt-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Enter your password"
             />
@@ -108,12 +147,12 @@ export default function Register() {
               }`}
               onClick={() => setShowPassword(!showPassword)}
             ></i>
+            {errors.password && (
+              <p className="text-red-500 text-xs mt-1">{errors.password}</p>
+            )}
           </div>
           <div className="mb-6 relative">
-            <label
-              htmlFor="confirmPassword"
-              className="block text-sm font-medium text-gray-700"
-            >
+            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
               Confirm Password
             </label>
             <input
@@ -121,7 +160,6 @@ export default function Register() {
               type={showConfirmPassword ? "text" : "password"}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              required
               className="w-full px-4 py-2 mt-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Confirm your password"
             />
@@ -131,6 +169,9 @@ export default function Register() {
               }`}
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
             ></i>
+            {errors.confirmPassword && (
+              <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>
+            )}
           </div>
           <button
             type="submit"

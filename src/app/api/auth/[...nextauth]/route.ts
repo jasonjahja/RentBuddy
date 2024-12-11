@@ -1,5 +1,4 @@
-import NextAuth from "next-auth";
-import { AuthOptions } from "next-auth";
+import NextAuth, { AuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { validateUser } from "../../../../lib/userData";
 
@@ -9,47 +8,52 @@ const authOptions: AuthOptions = {
     CredentialsProvider({
       name: "Credentials",
       credentials: {
-        email: { label: "Email", type: "text" },
-        password: { label: "Password", type: "password" },
+        email: { label: "Email", type: "text", placeholder: "Enter your email" },
+        password: { label: "Password", type: "password", placeholder: "Enter your password" },
       },
-      async authorize(credentials: Record<"email" | "password", string> | undefined) {
+      async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
           console.error("Missing email or password");
           return null;
         }
 
+        // Validate the user's credentials
         const user = await validateUser(credentials.email, credentials.password);
         if (!user) {
           console.error("Invalid credentials for email:", credentials.email);
           return null;
         }
 
-        return { id: user.id, email: user.email, name: user.name };
+        // Convert id to string to match next-auth User type
+        return { id: String(user.id), email: user.email, username: user.username };
       },
     }),
   ],
   session: {
-    strategy: "jwt",
+    strategy: "jwt", // Use JSON Web Tokens for session handling
   },
-  secret: process.env.JWT_SECRET || "default_jwt_secret",
+  secret: process.env.JWT_SECRET || "default_jwt_secret", // Ensure this is set properly in production
   callbacks: {
     async jwt({ token, user }) {
+      // Add user details to the JWT if available
       if (user) {
         token.id = user.id;
         token.email = user.email;
-        token.name = user.name;
+        token.username = user.username;
       }
       return token;
     },
     async session({ session, token }) {
+      // Add custom fields to the session object
       session.user = {
         id: token.id as string,
-        email: token.email,
-        name: token.name,
+        email: token.email as string,
+        username: token.username as string,
       };
       return session;
     },
   },
+  debug: process.env.NODE_ENV === "development", // Enable debug logs in development
 };
 
 // Handler

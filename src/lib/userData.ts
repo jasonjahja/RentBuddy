@@ -1,44 +1,48 @@
+import { PrismaClient, Prisma } from "@prisma/client";
 import bcrypt from "bcrypt";
 
-interface User {
-  id: string;
-  email: string;
-  password: string;
-  name: string; // Include name property
-}
-
-const users: User[] = []; // Shared in-memory user database
+const prisma = new PrismaClient();
 
 /**
  * Add a new user to the database.
- * @param name - User's name.
+ * @param username - User's username.
  * @param email - User's email.
  * @param password - Plain text password.
  * @returns The created user object.
  */
-export async function addUser(name: string, email: string, password: string): Promise<User> {
-  // Check if the user already exists
-  const existingUser = users.find((user) => user.email === email);
-  if (existingUser) {
-    throw new Error("User already exists.");
+export async function addUser(username: string, email: string, password: string) {
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const newUser = await prisma.user.create({
+      data: {
+        username,
+        email,
+        password: hashedPassword,
+      },
+    });
+
+    return newUser;
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      const targetFields = error.meta?.target as string[]; // Explicitly assert meta.target as an array of strings
+
+      if (targetFields?.includes("username")) {
+        throw new Error("This username is already taken. Please choose another.");
+      }
+      if (targetFields?.includes("email")) {
+        throw new Error("This email is already registered. Please use a different email.");
+      }
+    }
+
+    // Re-throw other errors
+    throw error;
   }
-
-  // Hash the password
-  const hashedPassword = await bcrypt.hash(password, 10);
-
-  // Create the new user
-  const newUser: User = {
-    id: String(users.length + 1),
-    name, // Store the name
-    email,
-    password: hashedPassword, // Store the hashed password
-  };
-
-  // Add to the shared users array
-  users.push(newUser);
-
-  return newUser;
 }
+
 
 /**
  * Validate a user's credentials.
@@ -46,8 +50,8 @@ export async function addUser(name: string, email: string, password: string): Pr
  * @param password - Plain text password.
  * @returns The user object if valid, or null if invalid.
  */
-export async function validateUser(email: string, password: string): Promise<User | null> {
-  const user = users.find((u) => u.email === email);
+export async function validateUser(email: string, password: string) {
+  const user = await prisma.user.findUnique({ where: { email } });
   if (!user) {
     return null; // User not found
   }
@@ -62,7 +66,8 @@ export async function validateUser(email: string, password: string): Promise<Use
 
 /**
  * Get all users (for debugging purposes).
+ * @returns A list of all users.
  */
-export function getUsers(): User[] {
-  return users;
+export async function getUsers() {
+  return await prisma.user.findMany();
 }

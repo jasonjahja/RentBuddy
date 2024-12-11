@@ -1,4 +1,6 @@
+// bento-grid.tsx
 import { cn } from "@/lib/utils";
+import React from "react";
 
 export const BentoGrid = ({
   className,
@@ -10,7 +12,7 @@ export const BentoGrid = ({
   return (
     <div
       className={cn(
-        "grid md:auto-rows-[18rem] grid-cols-1 md:grid-cols-3 gap-4 max-w-7xl mx-auto ",
+        "grid md:auto-rows-[18rem] grid-cols-1 md:grid-cols-3 gap-4 max-w-7xl mx-auto",
         className
       )}
     >
@@ -22,15 +24,19 @@ export const BentoGrid = ({
 export const BentoGridItem = ({
   className,
   title,
+  status,
   description,
   header,
   icon,
+  category,
 }: {
   className?: string;
   title?: string | React.ReactNode;
+  status?: boolean | React.ReactNode;
   description?: string | React.ReactNode;
   header?: React.ReactNode;
   icon?: React.ReactNode;
+  category?: string;
 }) => {
   return (
     <div
@@ -42,6 +48,13 @@ export const BentoGridItem = ({
       {header}
       <div className="group-hover/bento:translate-x-2 transition duration-200">
         {icon}
+        {category && (
+          <div className="inline-block mb-2">
+            <span className="inline-block border border-gray-300 rounded-full px-3 py-1 text-xs font-medium text-gray-700 dark:text-neutral-200 dark:border-white/[0.2]">
+              {category}
+            </span>
+          </div>
+        )}
         <div className="font-sans font-bold text-neutral-600 dark:text-neutral-200 mb-2 mt-2">
           {title}
         </div>

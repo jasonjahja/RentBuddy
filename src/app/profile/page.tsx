@@ -9,7 +9,11 @@ export default function ProfilePage() {
 
   // Redirect to login if not authenticated
   if (status === "loading") {
-    return <p>Loading...</p>; // Show a loading state while checking session
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-tr from-blue-50 to-gray-100">
+        <p className="text-gray-700 text-lg">Loading...</p>
+      </div>
+    );
   }
 
   if (!session) {
@@ -23,32 +27,38 @@ export default function ProfilePage() {
 
   // Display user information and logout button
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-md">
-        <h1 className="text-2xl font-bold text-center mb-6">Profile</h1>
-        <p className="text-center text-gray-600 mb-4">
-          Welcome, <span className="font-bold">{session.user?.name || "User"}</span>!
+    <div className="min-h-screen bg-gradient-to-tr from-blue-50 to-gray-100 flex items-center justify-center px-4">
+      <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-lg">
+        <h1 className="text-3xl font-extrabold text-center text-gray-900 mb-6">
+          Profile
+        </h1>
+        <p className="text-center text-gray-600 mb-8">
+          Welcome, <span className="font-bold">{session.user?.username || "User"}</span>!
         </p>
-        <ul className="text-sm text-gray-600">
+        <ul className="text-gray-700 text-sm leading-6 space-y-2 mb-8">
           <li>
-            <span className="font-medium">Name:</span> {session.user?.name || "N/A"}
+            <span className="font-semibold text-gray-800">Username:</span>{" "}
+            {session.user?.username || "N/A"}
           </li>
           <li>
-            <span className="font-medium">Email:</span> {session.user?.email}
+            <span className="font-semibold text-gray-800">Email:</span>{" "}
+            {session.user?.email}
           </li>
         </ul>
-        <button
-          onClick={handleLogout}
-          className="mt-6 w-full bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-600 transition duration-200"
-        >
-          Logout
-        </button>
-        <button
-          onClick={() => router.push("/")}
-          className="mt-4 w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition duration-200"
-        >
-          Go to Home
-        </button>
+        <div className="space-y-4">
+          <button
+            onClick={handleLogout}
+            className="w-full bg-red-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-red-600 transition duration-200"
+          >
+            Logout
+          </button>
+          <button
+            onClick={() => router.push("/")}
+            className="w-full bg-blue-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-blue-600 transition duration-200"
+          >
+            Go to Home
+          </button>
+        </div>
       </div>
     </div>
   );

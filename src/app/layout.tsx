@@ -19,7 +19,7 @@ const geistMono = localFont({
 
 const navItems = [
   { name: "Home", link: "/" },
-  { name: "Browse", link: "/#browse" },
+  { name: "Browse", link: "/browse" },
 ];
 
 export default function RootLayout({

@@ -14,17 +14,19 @@ export const authOptions = {
           throw new Error("Email and password are required.");
         }
 
+        // Validate the user's credentials
         const user = await validateUser(credentials.email, credentials.password);
         if (!user) {
           throw new Error("Invalid email or password.");
         }
 
-        return { id: user.id, name: user.name, email: user.email };
+        // Convert id to string to match next-auth User type
+        return { id: String(user.id), username: user.username, email: user.email };
       },
     }),
   ],
   session: {
-    strategy: "jwt",
+    strategy: "jwt", // Use JSON Web Tokens for session handling
   },
-  secret: process.env.JWT_SECRET,
+  secret: process.env.JWT_SECRET, // Ensure this is defined in your .env file
 };
