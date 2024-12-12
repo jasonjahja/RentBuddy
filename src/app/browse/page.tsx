@@ -41,20 +41,25 @@ export default function Browse() {
   }, []);
 
   // Apply filters to the items
-  const applyFilters = () => {
-    const lowerSearch = search.toLowerCase();
-    const filtered = items.filter((item) => {
-      const matchesSearch = item.title.toLowerCase().includes(lowerSearch);
-      const matchesCategory = category === "" || item.category === category;
-      const priceWithinRange =
-        (minPrice === "" || item.price >= parseFloat(minPrice)) &&
-        (maxPrice === "" || item.price <= parseFloat(maxPrice));
+  // Apply filters to the items
+const applyFilters = () => {
+  const lowerSearch = search.toLowerCase();
+  const filtered = items.filter((item) => {
+    const matchesSearch = item.title.toLowerCase().includes(lowerSearch);
 
-      return matchesSearch && matchesCategory && priceWithinRange;
-    });
+    // Normalize category comparison (case-insensitive)
+    const matchesCategory =
+      category === "" || item.category.toLowerCase() === category.toLowerCase();
 
-    setFilteredItems(filtered);
-  };
+    const priceWithinRange =
+      (minPrice === "" || item.price >= parseFloat(minPrice)) &&
+      (maxPrice === "" || item.price <= parseFloat(maxPrice));
+
+    return matchesSearch && matchesCategory && priceWithinRange;
+  });
+
+  setFilteredItems(filtered);
+};
 
   // Handle pressing Enter in the search field
   const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -97,7 +102,7 @@ export default function Browse() {
               onChange={(e) => setCategory(e.target.value)}
             >
               <option value="">All Categories</option>
-              <option value="Outdoors">Outdoors</option>
+              <option value="Outdoor">Outdoor</option>
               <option value="Electronics">Electronics</option>
               <option value="Home">Home</option>
               <option value="Transport">Transport</option>
