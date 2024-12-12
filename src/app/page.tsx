@@ -2,14 +2,42 @@
 
 import { useState, useEffect } from "react";
 import { BentoGrid, BentoGridItem } from "./components/ui/bento-grid";
-import { items } from "../data/items";
 import Link from "next/link";
 import Image from "next/image";
+
+type Item = {
+  id: number;
+  title: string;
+  description: string;
+  price: number;
+  category: string;
+  isAvailable: boolean;
+  url: string;
+};
 
 const images = ["/images/hero1.png", "/images/hero2.png", "/images/hero3.jpg"];
 
 export default function Home() {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [items, setItems] = useState<Item[]>([]);
+
+  useEffect(() => {
+    // Fetch items from the API
+    async function fetchItems() {
+      try {
+        const response = await fetch("/api/items");
+        if (!response.ok) {
+          throw new Error("Failed to fetch items");
+        }
+        const data = await response.json();
+        setItems(data);
+      } catch (error) {
+        console.error("Error fetching items:", error);
+      }
+    }
+
+    fetchItems();
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -71,20 +99,16 @@ export default function Home() {
             </div>
             <BentoGrid>
               {items.map((item, i) => {
-                const slug = item.title.replace(/\s+/g, '-').toLowerCase();
+                const slug = item.title.replace(/\s+/g, "-").toLowerCase();
                 return (
-                  <Link 
-                    key={i} 
-                    href={`/${slug}`}
-                    className="contents"
-                  >
+                  <Link key={i} href={`/${slug}`} className="contents">
                     <BentoGridItem
                       category={item.category}
                       title={item.title}
                       description={item.description}
                       header={
                         <div className="aspect-video w-full overflow-hidden rounded-xl">
-                          <Image 
+                          <Image
                             src={item.url}
                             alt={item.title}
                             style={{ objectFit: "cover", objectPosition: "center" }}

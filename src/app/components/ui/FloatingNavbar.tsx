@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
@@ -16,6 +16,20 @@ export const FloatingNav = ({
   className?: string;
 }) => {
   const { data: session, status } = useSession();
+  const [enhancedNavItems, setEnhancedNavItems] = useState(navItems);
+
+  // Update nav items based on session data after the client has mounted
+  useEffect(() => {
+    if (status === "authenticated" && session?.user?.role === "owner") {
+      // Add "Dashboard" only if it doesn't already exist
+      if (!enhancedNavItems.some((item) => item.link === "/owner")) {
+        setEnhancedNavItems((prevNavItems) => [
+          ...prevNavItems,
+          { name: "Dashboard", link: "/owner" },
+        ]);
+      }
+    }
+  }, [session, status, navItems, enhancedNavItems]);
 
   const sessionLink =
     status === "loading" ? (
@@ -64,9 +78,9 @@ export const FloatingNav = ({
       {/* Right Section (Navigation Items) */}
       <div className="flex items-center space-x-8">
         <div className="hidden sm:flex items-center space-x-6">
-          {navItems.map((navItem, idx: number) => (
+          {enhancedNavItems.map((navItem, idx: number) => (
             <Link
-              key={`link=${idx}`}
+              key={`link-${idx}`}
               href={navItem.link || "/"}
               className="relative text-sm font-medium text-neutral-600 dark:text-neutral-50 hover:text-neutral-900 dark:hover:text-neutral-300 transition-colors"
               aria-label={navItem.name}

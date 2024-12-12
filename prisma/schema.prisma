@@ -16,3 +16,27 @@ model User {
   trust_score Int?
 }
 
+model Item {
+  id           Int       @id @default(autoincrement())
+  title        String
+  description  String
+  price        Float
+  reviews      Review[]  // Relation to reviews
+  url          String
+  category     String
+  isAvailable  Boolean   // Availability status
+  rentDuration Int?      // Rent duration in days, optional
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  slug         String    @unique // Add slug as a unique field
+}
+
+model Review {
+  id      Int      @id @default(autoincrement())
+  user    String
+  comment String
+  rating  Int      // Rating out of 5
+  itemId  Int      // Foreign key to Item
+  item    Item     @relation(fields: [itemId], references: [id])
+  createdAt DateTime @default(now())
+}

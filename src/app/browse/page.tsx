@@ -1,23 +1,51 @@
 "use client";
 
-import { useState } from "react";
-import { items } from "../../data/items";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+
+type Item = {
+  id: number;
+  title: string;
+  description: string;
+  price: number;
+  category: string;
+  isAvailable: boolean;
+  url: string;
+};
 
 export default function Browse() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
-  const [filteredItems, setFilteredItems] = useState(items);
+  const [items, setItems] = useState<Item[]>([]);
+  const [filteredItems, setFilteredItems] = useState<Item[]>([]);
 
+  // Fetch items from the API
+  useEffect(() => {
+    async function fetchItems() {
+      try {
+        const response = await fetch("/api/items");
+        if (!response.ok) {
+          throw new Error("Failed to fetch items");
+        }
+        const data: Item[] = await response.json();
+        setItems(data);
+        setFilteredItems(data);
+      } catch (error) {
+        console.error("Error fetching items:", error);
+      }
+    }
+    fetchItems();
+  }, []);
+
+  // Apply filters to the items
   const applyFilters = () => {
     const lowerSearch = search.toLowerCase();
     const filtered = items.filter((item) => {
       const matchesSearch = item.title.toLowerCase().includes(lowerSearch);
-      const matchesCategory =
-        category === "" || item.category === category;
+      const matchesCategory = category === "" || item.category === category;
       const priceWithinRange =
         (minPrice === "" || item.price >= parseFloat(minPrice)) &&
         (maxPrice === "" || item.price <= parseFloat(maxPrice));
@@ -28,12 +56,14 @@ export default function Browse() {
     setFilteredItems(filtered);
   };
 
+  // Handle pressing Enter in the search field
   const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       applyFilters();
     }
   };
 
+  // Clear all filters
   const clearFilters = () => {
     setSearch("");
     setCategory("");
@@ -146,10 +176,10 @@ export default function Browse() {
 
         {/* Items Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {filteredItems.map((item, i) => {
+          {filteredItems.map((item) => {
             const slug = item.title.replace(/\s+/g, "-").toLowerCase();
             return (
-              <Link key={i} href={`/${slug}`}>
+              <Link key={item.id} href={`/${slug}`}>
                 <div className="bg-white border border-gray-200 rounded-lg shadow hover:shadow-lg transition overflow-hidden cursor-pointer">
                   <div className="aspect-video relative">
                     <Image
@@ -184,7 +214,10 @@ export default function Browse() {
                       {item.description}
                     </p>
                     <p className="text-blue-500 font-bold text-lg mt-4">
-                      Rp {item.price.toLocaleString("id-ID", { minimumFractionDigits: 2 })}
+                      Rp{" "}
+                      {item.price.toLocaleString("id-ID", {
+                        minimumFractionDigits: 2,
+                      })}
                     </p>
                   </div>
                 </div>

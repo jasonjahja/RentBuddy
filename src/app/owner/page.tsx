@@ -38,7 +38,7 @@ export default function Home() {
             Ready to rent out your items? Click the button below to add a new product.
           </p>
           <Link
-            href="/add-product"
+            href="/owner/AddProduct"
             className="bg-blue-500 text-white px-6 py-3 rounded-md font-semibold hover:bg-blue-600 transition"
           >
             Add Product
