@@ -2,7 +2,7 @@ import NextAuth, { AuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { validateUser } from "../../../../lib/userData";
 
-const authOptions: AuthOptions = {
+export const authOptions: AuthOptions = {
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -16,63 +16,56 @@ const authOptions: AuthOptions = {
           return null;
         }
 
-        // Validate the user's credentials
         const user = await validateUser(credentials.email, credentials.password);
         if (!user) {
           console.error("Invalid credentials for email:", credentials.email);
           return null;
         }
 
-        // Ensure role is of type "renter" | "owner"
-        const role = user.role as "renter" | "owner";
-        if (role !== "renter" && role !== "owner") {
+        if (!["renter", "owner"].includes(user.role)) {
           console.error("Invalid role in user data:", user.role);
           return null;
         }
 
-        // Include role and trust_score (if renter)
         return {
           id: String(user.id),
           email: user.email,
           username: user.username,
-          role,
-          trust_score: role === "renter" ? user.trust_score ?? undefined : undefined, // Ensure trust_score is undefined if null
+          role: user.role as "renter" | "owner",
+          trust_score: user.role === "renter" ? user.trust_score ?? undefined : undefined,
         };
       },
     }),
   ],
   session: {
-    strategy: "jwt", // Use JSON Web Tokens for session handling
+    strategy: "jwt",
   },
-  secret: process.env.JWT_SECRET || "default_jwt_secret", // Ensure this is set properly in production
+  secret: process.env.JWT_SECRET || "default_jwt_secret",
   callbacks: {
     async jwt({ token, user }) {
-      // Add user details to the JWT if available
       if (user) {
         token.id = user.id;
         token.email = user.email;
         token.username = user.username;
         token.role = user.role;
-        token.trust_score = user.trust_score ?? undefined; // Ensure trust_score is undefined if null
+        token.trust_score = user.trust_score ?? undefined;
       }
       return token;
     },
     async session({ session, token }) {
-      // Add custom fields to the session object
       session.user = {
         id: token.id as string,
         email: token.email as string,
         username: token.username as string,
         role: token.role as "renter" | "owner",
-        trust_score: token.trust_score, // trust_score will now be undefined if not applicable
+        trust_score: token.trust_score,
       };
       return session;
     },
   },
-  debug: process.env.NODE_ENV === "development", // Enable debug logs in development
+  debug: process.env.NODE_ENV === "development",
 };
 
-// Handler
 const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST };

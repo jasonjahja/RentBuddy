@@ -21,15 +21,19 @@ export const FloatingNav = ({
   // Update nav items based on session data after the client has mounted
   useEffect(() => {
     if (status === "authenticated" && session?.user?.role === "owner") {
-      // Add "Dashboard" only if it doesn't already exist
-      if (!enhancedNavItems.some((item) => item.link === "/owner")) {
-        setEnhancedNavItems((prevNavItems) => [
-          ...prevNavItems,
-          { name: "Dashboard", link: "/owner" },
-        ]);
-      }
+      // Add "Dashboard" and "My Items" only if they don't already exist
+      setEnhancedNavItems((prevNavItems) => {
+        const updatedNavItems = [...prevNavItems];
+        if (!updatedNavItems.some((item) => item.link === "/owner")) {
+          updatedNavItems.push({ name: "Dashboard", link: "/owner" });
+        }
+        if (!updatedNavItems.some((item) => item.link === "/owner/items")) {
+          updatedNavItems.push({ name: "My Items", link: "/owner/items" });
+        }
+        return updatedNavItems;
+      });
     }
-  }, [session, status, navItems, enhancedNavItems]);
+  }, [session, status, navItems]);
 
   const sessionLink =
     status === "loading" ? (
