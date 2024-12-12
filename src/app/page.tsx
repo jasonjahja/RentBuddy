@@ -47,12 +47,12 @@ export default function Home() {
               RentBuddy connects people with items to share with those who need them.
               Empowering communities, one rental at a time.
             </p>
-            <a
+            <Link
               href="/browse"
               className="bg-white text-blue-500 px-8 py-4 rounded-full shadow-lg font-semibold hover:bg-gray-100 transition"
             >
               Start Exploring
-            </a>
+            </Link>
           </div>
           <div className="absolute inset-0 bg-black bg-opacity-70"></div>
         </section>
@@ -82,7 +82,6 @@ export default function Home() {
                       category={item.category}
                       title={item.title}
                       description={item.description}
-                      status={item.isAvailable}
                       header={
                         <div className="aspect-video w-full overflow-hidden rounded-xl">
                           <Image 
