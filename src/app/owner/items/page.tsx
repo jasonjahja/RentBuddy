@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Item } from "@prisma/client";
 import { useSession } from "next-auth/react";
+import Image from "next/image";
 
 export default function OwnerItemsPage() {
   const { data: session, status } = useSession();
@@ -59,7 +60,7 @@ export default function OwnerItemsPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {items.map((item) => (
               <div key={item.id} className="bg-white border rounded-lg p-4 shadow-md">
-                <img
+                <Image
                   src={item.url}
                   alt={item.title}
                   className="w-full h-40 object-cover rounded-md mb-4"
