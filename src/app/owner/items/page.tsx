@@ -63,7 +63,9 @@ export default function OwnerItemsPage() {
                 <Image
                   src={item.url}
                   alt={item.title}
-                  className="w-full h-40 object-cover rounded-md mb-4"
+                  width={280}
+                  height={240}
+                  className="object-cover rounded-md mb-4"
                 />
                 <h2 className="text-xl font-semibold">{item.title}</h2>
                 <p className="text-gray-600">{item.description}</p>
