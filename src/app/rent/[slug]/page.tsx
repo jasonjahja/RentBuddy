@@ -2,6 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import { DateRangePicker, RangeKeyDict } from "react-date-range";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
@@ -18,6 +19,7 @@ type Item = {
 
 export default function RentPage() {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const params = useParams();
   const slug = params?.slug as string; // Explicitly cast to string
   const [selectedDates, setSelectedDates] = useState({
@@ -61,6 +63,11 @@ export default function RentPage() {
     return <p>{error || "Item not found"}</p>;
   }
 
+  if (status === "unauthenticated") {
+    router.push("/auth/login"); // Redirect to login page
+    return null;
+  }
+
   const handleDateChange = (ranges: RangeKeyDict) => {
     setSelectedDates({
       startDate: ranges.selection.startDate || new Date(),
@@ -74,14 +81,46 @@ export default function RentPage() {
 
   const totalCost = Math.max(1, Math.ceil(durationInDays)) * item.price;
 
-  const handlePayment = () => {
-    alert(
-      `Payment confirmed for ${item.title}. Total cost: Rp ${totalCost.toLocaleString(
-        "id-ID"
-      )}. Rental duration: ${Math.max(1, Math.ceil(durationInDays))} days.`
-    );
-    setIsModalOpen(false);
-  };
+  const handlePayment = async () => {
+    if (!session) {
+      alert("You must be logged in to rent an item.");
+      return;
+    }
+  
+    try {
+      const response = await fetch("/api/rentals", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: session.user.id,
+          itemId: item?.id,
+          startDate: selectedDates.startDate,
+          endDate: selectedDates.endDate,
+          totalCost,
+        }),
+      });
+  
+      if (response.ok) {
+        // Try parsing JSON if response has body
+        const responseData = response.headers.get("content-length") !== "0"
+          ? await response.json()
+          : null;
+  
+        alert(
+          `Payment confirmed for ${item.title}. Total cost: Rp ${totalCost.toLocaleString(
+            "id-ID"
+          )}. Rental duration: ${Math.max(1, Math.ceil(durationInDays))} days.`
+        );
+        setIsModalOpen(false);
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to process payment: ${errorData.error}`);
+      }
+    } catch (err) {
+      console.error("Error processing payment:", err);
+      alert("An unexpected error occurred while processing payment.");
+    }
+  };  
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
@@ -160,7 +199,6 @@ export default function RentPage() {
           Rent Now
         </button>
       </div>
-
       {/* Payment Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

@@ -7,6 +7,18 @@ generator client {
   provider = "prisma-client-js"
 }
 
+model Rental {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  itemId     Int
+  startDate  DateTime
+  endDate    DateTime
+  totalCost  Float
+  item       Item     @relation(fields: [itemId], references: [id])
+  user       User     @relation(fields: [userId], references: [id])
+  createdAt  DateTime @default(now())
+}
+
 model User {
   id          Int     @id @default(autoincrement())
   username    String  @unique
@@ -15,6 +27,7 @@ model User {
   role        String
   trust_score Int?
   items       Item[]
+  rentals     Rental[]
 }
 
 model Item {
@@ -32,11 +45,13 @@ model Item {
   slug         String    @unique
   ownerId      Int
   owner        User      @relation(fields: [ownerId], references: [id])
+  rentals      Rental[]
 }
 
 model Review {
   id      Int      @id @default(autoincrement())
-  user    String
+  user    Int
+  name    String
   comment String
   rating  Int      // Rating out of 5
   itemId  Int      // Foreign key to Item

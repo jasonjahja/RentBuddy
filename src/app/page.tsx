@@ -15,7 +15,7 @@ type Item = {
   url: string;
 };
 
-const images = ["/images/hero1.png", "/images/hero2.png", "/images/hero3.jpg"];
+const images = ["/images/hero1.webp", "/images/hero2.webp", "/images/hero3.webp"];
 
 export default function Home() {
   const [currentIndex, setCurrentIndex] = useState(0);

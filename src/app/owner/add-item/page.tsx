@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-export default function AddProduct() {
+export default function AddItem() {
   const [productName, setProductName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
@@ -16,13 +16,26 @@ export default function AddProduct() {
     setIsSubmitting(true);
     setMessage("");
 
+    const numericPrice = parseFloat(price.replace(/[^\d]/g, ""));
+    if (isNaN(numericPrice) || numericPrice <= 0) {
+      setMessage("Error: Price must be a positive number");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!category) {
+      setMessage("Error: Please select a category or add a new one.");
+      setIsSubmitting(false);
+      return;
+    }
+
     const newItem = {
       title: productName,
       description,
-      price: parseFloat(price),
+      price: numericPrice,
       category,
       isAvailable: true, // Always available
-      url: "/images/bike.png", // Default image
+      url: "/images/bike.webp", // Default image
     };
 
     try {
@@ -59,6 +72,16 @@ export default function AddProduct() {
     if (category && !categories.includes(category)) {
       setCategories([...categories, category]);
     }
+  };
+
+  const formatIDR = (value: string) => {
+    const numericValue = value.replace(/[^\d]/g, ""); // Remove non-numeric characters
+    return numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, "."); // Add thousands separator
+  };
+
+  const handlePriceInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formattedPrice = formatIDR(e.target.value);
+    setPrice(formattedPrice ? `Rp ${formattedPrice}` : "");
   };
 
   return (
@@ -108,9 +131,9 @@ export default function AddProduct() {
             </label>
             <input
               id="price"
-              type="number"
+              type="text"
               value={price}
-              onChange={(e) => setPrice(e.target.value)}
+              onChange={handlePriceInput}
               required
               className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Enter price"

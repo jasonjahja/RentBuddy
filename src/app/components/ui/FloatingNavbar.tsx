@@ -1,6 +1,4 @@
-"use client";
-
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
@@ -15,25 +13,16 @@ export const FloatingNav = ({
   }[];
   className?: string;
 }) => {
-  const { data: session, status } = useSession();
-  const [enhancedNavItems, setEnhancedNavItems] = useState(navItems);
-
-  // Update nav items based on session data after the client has mounted
-  useEffect(() => {
-    if (status === "authenticated" && session?.user?.role === "owner") {
-      // Add "Dashboard" and "My Items" only if they don't already exist
-      setEnhancedNavItems((prevNavItems) => {
-        const updatedNavItems = [...prevNavItems];
-        if (!updatedNavItems.some((item) => item.link === "/owner")) {
-          updatedNavItems.push({ name: "Dashboard", link: "/owner" });
-        }
-        if (!updatedNavItems.some((item) => item.link === "/owner/items")) {
-          updatedNavItems.push({ name: "My Items", link: "/owner/items" });
-        }
-        return updatedNavItems;
-      });
+  const { data: session, status } = useSession()
+  if (status === "authenticated" && session?.user?.role === "owner") {
+    if (!navItems.some((item) => item.link === "/owner/items")) {
+      navItems.push({ name: "My Items", link: "/owner/items" });
     }
-  }, [session, status, navItems]);
+  } if (status === "authenticated" && session?.user?.role === "renter") {
+    if (!navItems.some((item) => item.link === "/history")) {
+      navItems.push({ name: "History", link: "/history" });
+    }
+  }
 
   const sessionLink =
     status === "loading" ? (
@@ -82,7 +71,7 @@ export const FloatingNav = ({
       {/* Right Section (Navigation Items) */}
       <div className="flex items-center space-x-8">
         <div className="hidden sm:flex items-center space-x-6">
-          {enhancedNavItems.map((navItem, idx: number) => (
+          {navItems.map((navItem, idx: number) => (
             <Link
               key={`link-${idx}`}
               href={navItem.link || "/"}

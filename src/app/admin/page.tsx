@@ -24,6 +24,8 @@ type Item = {
   ownerId?: number | null;
 };
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000";
+
 export default function AdminPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [items, setItems] = useState<Item[]>([]);
@@ -37,14 +39,16 @@ export default function AdminPage() {
 
       try {
         const [usersResponse, itemsResponse] = await Promise.all([
-          fetch("/api/admin/users"),
-          fetch("/api/admin/items"),
+          fetch(`${API_BASE_URL}/api/admin/users`),
+          fetch(`${API_BASE_URL}/api/admin/items`),
         ]);
 
         if (!usersResponse.ok) {
+          console.error("Users API Error:", await usersResponse.text());
           throw new Error("Failed to fetch users data");
         }
         if (!itemsResponse.ok) {
+          console.error("Items API Error:", await itemsResponse.text());
           throw new Error("Failed to fetch items data");
         }
 
@@ -54,6 +58,7 @@ export default function AdminPage() {
         setUsers(usersData);
         setItems(itemsData);
       } catch (err) {
+        console.error("Fetch Error:", err);
         setError((err as Error).message);
       } finally {
         setLoading(false);
