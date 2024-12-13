@@ -101,11 +101,6 @@ export default function RentPage() {
       });
   
       if (response.ok) {
-        // Try parsing JSON if response has body
-        const responseData = response.headers.get("content-length") !== "0"
-          ? await response.json()
-          : null;
-  
         alert(
           `Payment confirmed for ${item.title}. Total cost: Rp ${totalCost.toLocaleString(
             "id-ID"

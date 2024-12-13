@@ -31,7 +31,7 @@ export default function RootLayout({
 
   // Define routes where the navbar should not appear
   const noNavRoutes = ["/auth/login", "/auth/register"];
-  const shouldShowNavbar = !noNavRoutes.includes(pathname);
+  const shouldShowNavbar = !noNavRoutes.includes(pathname!);
 
   return (
     <html lang="en">

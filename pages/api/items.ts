@@ -1,14 +1,13 @@
+import { auth } from "@/auth";
 import { PrismaClient } from "@prisma/client";
 import { NextApiRequest, NextApiResponse } from "next";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "../../src/app/api/auth/[...nextauth]/route";
 
 const prisma = new PrismaClient();
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     if (req.method === "POST") {
-      const session = await getServerSession(req, res, authOptions);
+      const session = await auth()
 
       if (!session || !session.user) {
         return res.status(401).json({ error: "Unauthorized. Please log in." });

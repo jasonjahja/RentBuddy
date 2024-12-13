@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 type Rental = {
   id: number;
@@ -74,7 +75,7 @@ export default function HistoryPage() {
                 className="p-4 bg-blue-50 rounded-lg shadow-md flex items-center gap-4 justify-between"
               >
                 <div className="flex items-center gap-4">
-                  <img
+                  <Image
                     src={rental.item.url}
                     alt={rental.item.title}
                     className="w-24 h-24 rounded-lg object-cover"

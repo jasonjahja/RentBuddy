@@ -6,14 +6,8 @@ const prisma = new PrismaClient();
 // DELETE: Delete an item
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string } }
 ) {
-  const itemId = parseInt(params.id, 10);
-
-  if (isNaN(itemId)) {
-    return NextResponse.json({ error: "Invalid item ID" }, { status: 400 });
-  }
-
+  const { itemId }  = await req.json()
   try {
     await prisma.item.delete({
       where: { id: itemId },
@@ -31,13 +25,11 @@ export async function DELETE(
 
 // PUT: Update an item
 export async function PUT(
-  req: Request,
-  { params }: { params: { id: string } }
+  req: Request
 ) {
   try {
-    const { id } = params;
     const body = await req.json();
-    const { title, description, price } = body;
+    const { title, description, price, id } = body;
 
     const updatedItem = await prisma.item.update({
       where: { id: parseInt(id, 10) },

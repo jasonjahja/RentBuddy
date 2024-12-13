@@ -57,7 +57,7 @@ export default function AddItem() {
         const errorData = await response.json();
         setMessage(`Error: ${errorData.error || "Unable to add product"}`);
       }
-    } catch (error) {
+    } catch {
       setMessage("Error: Something went wrong");
     } finally {
       setIsSubmitting(false);
