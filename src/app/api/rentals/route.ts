@@ -112,7 +112,7 @@ export async function GET(req: Request) {
     // Check if the user has reviewed each rental's item
     const rentalsWithReviews = await Promise.all(
       rentals.map(async (rental) => {
-        const hasReviewed = await prisma.review.findFirst({
+        const hasReviewed = await prisma.itemReview.findFirst({
           where: {
             renterId: parsedUserId, // Ensure this is a number
             itemId: rental.itemId, // Check reviews for the item

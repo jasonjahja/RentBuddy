@@ -16,29 +16,38 @@ type Item = {
 };
 
 const images = ["/images/hero1.webp", "/images/hero2.webp", "/images/hero3.webp"];
+const fallbackImage = "/images/default-placeholder.png";
 
 export default function Home() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [items, setItems] = useState<Item[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
+  // Fetch items from the API
   useEffect(() => {
-    // Fetch items from the API
     async function fetchItems() {
       try {
+        setIsLoading(true);
         const response = await fetch("/api/items");
         if (!response.ok) {
           throw new Error("Failed to fetch items");
         }
         const data = await response.json();
         setItems(data);
+        setError(null); // Clear any previous errors
       } catch (error) {
         console.error("Error fetching items:", error);
+        setError("Unable to load items. Please try again later.");
+      } finally {
+        setIsLoading(false);
       }
     }
 
     fetchItems();
   }, []);
 
+  // Hero image carousel logic
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
@@ -82,7 +91,7 @@ export default function Home() {
               Start Exploring
             </Link>
           </div>
-          <div className="absolute inset-0 bg-black bg-opacity-70"></div>
+          <div className="absolute inset-0 bg-black bg-opacity-60"></div>
         </section>
 
         {/* Browse Items Section */}
@@ -97,36 +106,49 @@ export default function Home() {
                 View All
               </Link>
             </div>
-            <BentoGrid>
-              {items.map((item, i) => {
-                const slug = item.title.replace(/\s+/g, "-").toLowerCase();
-                return (
-                  <Link key={i} href={`/${slug}`} className="contents">
-                    <BentoGridItem
-                      category={item.category}
-                      title={item.title}
-                      description={item.description}
-                      header={
-                        <div className="aspect-video w-full overflow-hidden rounded-xl">
-                          <Image
-                            src={item.url}
-                            alt={item.title}
-                            style={{ objectFit: "cover", objectPosition: "center" }}
-                            width={800}
-                            height={400}
-                          />
-                        </div>
-                      }
-                      className={i === 3 || i === 6 ? "md:col-span-2" : ""}
-                    />
-                  </Link>
-                );
-              })}
-            </BentoGrid>
+
+            {isLoading ? (
+              <p className="text-center text-gray-500">Loading items...</p>
+            ) : error ? (
+              <p className="text-center text-red-500">{error}</p>
+            ) : (
+              <BentoGrid>
+                {items.map((item, i) => {
+                  // Create slug dynamically
+                  const slug = item.title
+                    .replace(/\s+/g, "-")
+                    .toLowerCase()
+                    .replace(/[^\w-]/g, "");
+
+                  return (
+                    <Link key={i} href={`/${slug}`} className="contents">
+                      <BentoGridItem
+                        category={item.category}
+                        title={item.title}
+                        description={item.description}
+                        header={
+                          <div className="aspect-video w-full overflow-hidden rounded-xl">
+                            <Image
+                              src={item.url || fallbackImage}
+                              alt={item.title || "Item image"}
+                              style={{ objectFit: "cover", objectPosition: "center" }}
+                              width={800}
+                              height={400}
+                            />
+                          </div>
+                        }
+                        className={i === 3 || i === 6 ? "md:col-span-2" : ""}
+                      />
+                    </Link>
+                  );
+                })}
+              </BentoGrid>
+            )}
           </div>
         </section>
       </main>
 
+      {/* Footer */}
       <footer className="bg-gray-800 text-white py-8">
         <div className="container mx-auto px-4 text-center">
           <p>&copy; 2024 RentBuddy. All rights reserved.</p>

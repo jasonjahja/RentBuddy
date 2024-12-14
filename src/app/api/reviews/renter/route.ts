@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 
 export async function POST(req: Request) {
   try {
-    const { renterId, trustScore, comment, itemId } = await req.json();
+    const { renterId, trustScore, comment, ownerId } = await req.json();
 
     // Validate input
     if (!renterId || typeof renterId !== "number") {
@@ -29,25 +29,25 @@ export async function POST(req: Request) {
       );
     }
 
-    if (!itemId || typeof itemId !== "number") {
+    if (!ownerId || typeof ownerId !== "number") {
       return NextResponse.json(
-        { error: "Invalid itemId. It must be a valid item ID." },
+        { error: "Invalid ownerId. It must be a valid user ID." },
         { status: 400 }
       );
     }
 
-    // Add the review
-    await prisma.review.create({
+    // Create a new renter review
+    await prisma.renterReview.create({
       data: {
         comment,
-        trustScore, // Use trustScore instead of rating
-        item: { connect: { id: itemId } }, // Connect to the item
-        renter: { connect: { id: renterId } }, // Connect to the renter
+        trustScore,
+        renter: { connect: { id: renterId } }, // Connect to the renter being reviewed
+        owner: { connect: { id: ownerId } },   // Connect to the owner giving the review
       },
     });
 
     // Calculate the updated trust score for the renter
-    const avgTrustScoreResult = await prisma.review.aggregate({
+    const avgTrustScoreResult = await prisma.renterReview.aggregate({
       _avg: { trustScore: true },
       where: { renterId },
     });

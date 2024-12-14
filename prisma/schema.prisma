@@ -1,10 +1,10 @@
-generator client {
-  provider = "prisma-client-js"
-}
-
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
 }
 
 model Rental {
@@ -20,19 +20,21 @@ model Rental {
 }
 
 model User {
-  id          Int      @id @default(autoincrement())
-  username    String   @unique
-  email       String   @unique
-  password    String
-  role        String
-  trust_score Int?
-  items       Item[]
-  rentals     Rental[]
-  reviews     Review[] @relation("UserReviews") // Added relation to connect reviews by renter
+  id             Int             @id @default(autoincrement())
+  username       String          @unique
+  email          String          @unique
+  password       String
+  role           String
+  trust_score    Int?
+  items          Item[]
+  rentals        Rental[]
+  itemReviews    ItemReview[]    @relation("UserItemReviews")  // Relation to item reviews
+  renterReviews  RenterReview[]  @relation("UserRenterReviews") // Relation to reviews received as a renter
+  ownerReviews   RenterReview[]  @relation("OwnerRenterReviews") // Relation to reviews given as an owner
 }
 
 model Item {
-  id           Int      @id @default(autoincrement())
+  id           Int          @id @default(autoincrement())
   title        String
   description  String
   price        Float
@@ -40,22 +42,35 @@ model Item {
   category     String
   isAvailable  Boolean
   rentDuration Int?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  slug         String   @unique
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  slug         String        @unique
   ownerId      Int
-  owner        User     @relation(fields: [ownerId], references: [id])
+  owner        User          @relation(fields: [ownerId], references: [id])
   rentals      Rental[]
-  reviews      Review[] @relation("ItemReviews") // Added explicit relation for item reviews
+  itemReviews  ItemReview[]  @relation("ItemItemReviews") // Relation to item reviews
 }
 
-model Review {
+model ItemReview {
+  id        Int      @id @default(autoincrement())
+  rating    Int      // Rating for the item (1-5)
+  comment   String   // Review text for the item
+  itemId    Int      // Item being reviewed
+  renterId  Int      // Renter who is reviewing the item
+  createdAt DateTime @default(now())
+
+  item      Item     @relation(fields: [itemId], references: [id], name: "ItemItemReviews")
+  renter    User     @relation(fields: [renterId], references: [id], name: "UserItemReviews")
+}
+
+model RenterReview {
   id         Int      @id @default(autoincrement())
-  renterId   Int      // Added renterId to identify the user being reviewed
-  trustScore Int      // Score (0-100)
-  comment    String
-  itemId     Int
+  trustScore Int      // Trust score for the renter (0-100)
+  comment    String   // Feedback about the renter
+  renterId   Int      // Renter being reviewed
+  ownerId    Int      // Owner reviewing the renter
   createdAt  DateTime @default(now())
-  item       Item     @relation(fields: [itemId], references: [id], name: "ItemReviews") // Bidirectional relation with Item
-  renter     User     @relation(fields: [renterId], references: [id], name: "UserReviews") // Bidirectional relation with User
+
+  renter     User     @relation(fields: [renterId], references: [id], name: "UserRenterReviews")
+  owner      User     @relation(fields: [ownerId], references: [id], name: "OwnerRenterReviews")
 }

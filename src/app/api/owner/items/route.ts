@@ -58,7 +58,7 @@ export async function GET(req: Request) {
     if (slug) {
       const item = await prisma.item.findUnique({
         where: { slug },
-        include: { reviews: true },
+        include: { itemReviews: true },
       });
 
       if (!item) {
@@ -72,7 +72,7 @@ export async function GET(req: Request) {
     }
 
     const items = await prisma.item.findMany({
-      include: { reviews: true },
+      include: { itemReviews: true },
     });
 
     return NextResponse.json(items, { status: 200 });
