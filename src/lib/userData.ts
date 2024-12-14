@@ -18,6 +18,17 @@ export async function addUser(
   role: "renter" | "owner"
 ) {
   try {
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      throw new Error("Invalid email format.");
+    }
+
+    // Validate password strength
+    if (password.length < 6) {
+      throw new Error("Password must be at least 6 characters long.");
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const newUser = await prisma.user.create({
@@ -46,10 +57,17 @@ export async function addUser(
       }
     }
 
-    // Re-throw other errors
-    throw error;
+    // Re-throw the original error message if it's a validation or known error
+    if (error instanceof Error) {
+      throw error;
+    }
+
+    // Log and throw a generic error for unexpected cases
+    console.error("Unexpected error adding user:", error);
+    throw new Error("An unexpected error occurred.");
   }
 }
+
 
 /**
  * Validate a user's credentials.
@@ -78,11 +96,16 @@ export async function validateUser(email: string, password: string) {
  * @returns The updated user object.
  */
 export async function updateTrustScore(userId: string, trustScore: number) {
-  const updatedUser = await prisma.user.update({
-    where: { id: Number(userId) }, // Convert string to number
-    data: { trust_score: trustScore },
-  });
-  return updatedUser;
+  try {
+    const updatedUser = await prisma.user.update({
+      where: { id: Number(userId) }, // Convert string to number
+      data: { trust_score: trustScore },
+    });
+    return updatedUser;
+  } catch (error) {
+    console.error("Error updating trust score:", error);
+    throw new Error("Failed to update trust score.");
+  }
 }
 
 /**
@@ -90,5 +113,10 @@ export async function updateTrustScore(userId: string, trustScore: number) {
  * @returns A list of all users.
  */
 export async function getUsers() {
-  return await prisma.user.findMany();
+  try {
+    return await prisma.user.findMany();
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    throw new Error("Failed to fetch users.");
+  }
 }

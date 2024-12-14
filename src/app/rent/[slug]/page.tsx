@@ -118,7 +118,7 @@ export default function RentPage() {
   };  
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
+    <main className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-8 mt-20">
         <div className="w-full max-w-5xl mb-6">
           <button
@@ -266,6 +266,6 @@ export default function RentPage() {
           </div>
         </div>
       )}
-    </div>
+    </main>
   );
 }

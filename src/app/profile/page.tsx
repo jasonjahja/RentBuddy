@@ -31,7 +31,7 @@ export default function ProfilePage() {
   const { username, email, role, trust_score } = session.user || {};
 
   return (
-    <div className="min-h-screen bg-gradient-to-tr from-blue-50 to-gray-100 flex items-center justify-center px-4">
+    <main className="min-h-screen bg-gradient-to-tr from-blue-50 to-gray-100 flex items-center justify-center px-4">
       <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-lg">
         <h1 className="text-3xl font-extrabold text-center text-gray-900 mb-6">
           Profile
@@ -85,6 +85,6 @@ export default function ProfilePage() {
           </button>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

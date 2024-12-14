@@ -48,7 +48,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <main className="min-h-screen bg-gray-100">
       <main>
         {/* Hero Section */}
         <section className="relative h-screen bg-blue-500 text-white flex items-center justify-center">
@@ -132,6 +132,6 @@ export default function Home() {
           <p>&copy; 2024 RentBuddy. All rights reserved.</p>
         </div>
       </footer>
-    </div>
+    </main>
   );
 }

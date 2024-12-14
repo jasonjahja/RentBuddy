@@ -78,7 +78,7 @@ const applyFilters = () => {
   };
 
   return (
-    <div className="bg-gray-50 min-h-screen pt-[64px] relative">
+    <main className="bg-gray-50 min-h-screen pt-[64px] relative">
       {/* Fixed Filter Container */}
       <aside
         className="fixed top-[88px] left-[24px] w-[300px] h-auto border border-gray-300 rounded-lg p-6 bg-white flex flex-col justify-between"
@@ -231,6 +231,6 @@ const applyFilters = () => {
           })}
         </div>
       </main>
-    </div>
+    </main>
   );
 }

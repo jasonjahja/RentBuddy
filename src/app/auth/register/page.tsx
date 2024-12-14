@@ -26,7 +26,7 @@ export default function Register() {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-
+  
     const newErrors = {
       username: "",
       email: "",
@@ -34,7 +34,8 @@ export default function Register() {
       confirmPassword: "",
       role: "",
     };
-
+  
+    // Frontend validation
     if (!username) {
       newErrors.username = "Username is required.";
     }
@@ -43,6 +44,8 @@ export default function Register() {
     }
     if (!password) {
       newErrors.password = "Password is required.";
+    } else if (password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters long.";
     }
     if (password !== confirmPassword) {
       newErrors.confirmPassword = "Passwords do not match.";
@@ -50,52 +53,57 @@ export default function Register() {
     if (!role) {
       newErrors.role = "Role selection is required.";
     }
-
+  
     if (Object.values(newErrors).some((error) => error !== "")) {
       setErrors(newErrors);
       return;
     }
-
+  
     setErrors({ username: "", email: "", password: "", confirmPassword: "", role: "" });
-
-    const response = await fetch("/api/auth/register", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ username, email, password, role }),
-    });
-
-    const data = await response.json();
-
-    if (response.ok) {
-      const signInResponse = await signIn("credentials", {
-        redirect: false,
-        email,
-        password,
+  
+    try {
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username, email, password, role }),
       });
-
-      if (signInResponse?.ok) {
-        router.push("/"); // Redirect to home on success
+  
+      const data = await response.json();
+  
+      if (response.ok) {
+        const signInResponse = await signIn("credentials", {
+          redirect: false,
+          email,
+          password,
+        });
+  
+        if (signInResponse?.ok) {
+          router.push("/"); // Redirect to home on success
+        } else {
+          setErrors((prev) => ({
+            ...prev,
+            email: "Registration successful, but login failed. Try logging in manually.",
+          }));
+        }
       } else {
-        setMessage("");
+        // Show backend error messages under relevant fields
         setErrors((prev) => ({
           ...prev,
-          email: "Registration successful, but login failed. Try logging in manually.",
+          email: data.error.includes("email") ? data.error : prev.email,
+          username: data.error.includes("username") ? data.error : prev.username,
+          password: data.error.includes("Password") ? data.error : prev.password,
         }));
       }
-    } else {
-      setMessage("");
-      setErrors((prev) => ({
-        ...prev,
-        email: data.error.includes("email") ? data.error : prev.email,
-        username: data.error.includes("username") ? data.error : prev.username,
-      }));
+    } catch (error) {
+      console.error("Error submitting registration:", error);
     }
   };
+  
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+    <main className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-md">
         <h1 className="text-2xl font-bold text-center mb-6">Create an Account</h1>
         {message && (
@@ -207,6 +215,6 @@ export default function Register() {
           </Link>
         </p>
       </div>
-    </div>
+    </main>
   );
 }

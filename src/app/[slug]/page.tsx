@@ -117,7 +117,7 @@ export default function ItemDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center py-12 mt-14">
+    <main className="min-h-screen bg-gray-100 flex flex-col items-center py-12 mt-14">
       <div className="w-full max-w-5xl bg-white rounded-lg shadow-lg overflow-hidden p-6">
         {/* Back Button */}
         <div className="w-full max-w-5xl mb-6">
@@ -272,6 +272,6 @@ export default function ItemDetailPage() {
           </div>
         </div>
       )}
-    </div>
+    </main>
   );
 }
