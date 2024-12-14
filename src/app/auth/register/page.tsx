@@ -20,7 +20,6 @@ export default function Register() {
     confirmPassword: "",
     role: "",
   });
-  const [message, setMessage] = useState("");
 
   const router = useRouter();
 
@@ -106,9 +105,6 @@ export default function Register() {
     <main className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-md">
         <h1 className="text-2xl font-bold text-center mb-6">Create an Account</h1>
-        {message && (
-          <p className="mb-4 text-center text-green-600 font-medium">{message}</p>
-        )}
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <label htmlFor="username" className="block text-sm font-medium text-gray-700">
