@@ -15,6 +15,9 @@ export const FloatingNav = ({
 }) => {
   const { data: session, status } = useSession()
   if (status === "authenticated" && session?.user?.role === "owner") {
+    if (!navItems.some((item) => item.link === "/owner/history")) {
+      navItems.push({ name: "Rentals", link: "/owner/history" });
+    }
     if (!navItems.some((item) => item.link === "/owner/items")) {
       navItems.push({ name: "My Items", link: "/owner/items" });
     }

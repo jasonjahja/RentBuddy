@@ -15,50 +15,31 @@ if (process.env.NODE_ENV === "production") {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { userId, name, rentalId, rating, comment } = body;
+    const { renterId, trustScore, comment, itemId } = body;
 
-    console.log("Received Payload:", { userId, name, rentalId, rating, comment });
+    console.log("Received Payload:", { renterId, trustScore, comment, itemId });
 
     // Validate input
-    const parsedUserId = parseInt(userId, 10);
-    const parsedRentalId = parseInt(rentalId, 10);
-
     if (
-      isNaN(parsedUserId) ||
-      isNaN(parsedRentalId) ||
-      !rating ||
-      rating < 1 ||
-      rating > 5 ||
-      !name
+      !renterId ||
+      !itemId ||
+      !comment ||
+      trustScore < 0 ||
+      trustScore > 100
     ) {
       return NextResponse.json(
         {
           success: false,
-          error: "Invalid input. Ensure all fields are provided and valid.",
+          error: "Invalid input. Ensure renterId, trustScore (0-100), comment, and itemId are provided.",
         },
         { status: 400 }
       );
     }
 
-    // Find the rental and associated item
-    const rental = await prisma.rental.findUnique({
-      where: { id: parsedRentalId },
-      include: { item: true },
-    });
-
-    if (!rental) {
-      return NextResponse.json(
-        { success: false, error: "Rental not found." },
-        { status: 404 }
-      );
-    }
-
-    const itemId = rental.item.id;
-
-    // Check if the user has already left a review for this rental's item
+    // Check if a review already exists for this renter and item
     const existingReview = await prisma.review.findFirst({
       where: {
-        user: parsedUserId,
+        renterId,
         itemId,
       },
     });
@@ -67,8 +48,11 @@ export async function POST(req: Request) {
       // Update the existing review
       const updatedReview = await prisma.review.update({
         where: { id: existingReview.id },
-        data: { rating, comment, name },
+        data: { trustScore, comment },
       });
+
+      // Update renter's trust score
+      await updateRenterTrustScore(renterId);
 
       return NextResponse.json({
         success: true,
@@ -80,13 +64,15 @@ export async function POST(req: Request) {
     // Create a new review
     const newReview = await prisma.review.create({
       data: {
-        user: parsedUserId,
-        name, // Store the user's name
+        renterId,
+        trustScore,
         comment,
-        rating,
         itemId,
       },
     });
+
+    // Update renter's trust score
+    await updateRenterTrustScore(renterId);
 
     return NextResponse.json({
       success: true,
@@ -113,25 +99,26 @@ export async function POST(req: Request) {
 export async function PUT(req: Request) {
   try {
     const body = await req.json();
-    const { rentalId, rating, comment, name } = body;
+    const { reviewId, trustScore, comment } = body;
 
-    console.log("Received Payload for PUT:", { rentalId, rating, comment, name });
-
-    if (!rentalId || !rating || rating < 1 || rating > 5 || !name || !comment) {
+    if (!reviewId || trustScore < 0 || trustScore > 100 || !comment) {
       return NextResponse.json(
         {
           success: false,
-          error: "Invalid input. Ensure all fields are provided and valid.",
+          error: "Invalid input. Ensure reviewId, trustScore (0-100), and comment are provided.",
         },
         { status: 400 }
       );
     }
 
-    // Update the existing review
+    // Update the review
     const updatedReview = await prisma.review.update({
-      where: { id: rentalId },
-      data: { rating, comment, name },
+      where: { id: reviewId },
+      data: { trustScore, comment },
     });
+
+    // Update renter's trust score
+    await updateRenterTrustScore(updatedReview.renterId);
 
     return NextResponse.json({
       success: true,
@@ -157,43 +144,28 @@ export async function PUT(req: Request) {
 // GET: Fetch the review for a rental
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
-  const userId = searchParams.get("userId");
-  const rentalId = searchParams.get("rentalId");
+  const renterId = searchParams.get("renterId");
+  const itemId = searchParams.get("itemId");
 
-  const parsedUserId = parseInt(userId || "", 10);
-  const parsedRentalId = parseInt(rentalId || "", 10);
-
-  if (isNaN(parsedUserId) || isNaN(parsedRentalId)) {
+  if (!renterId || !itemId) {
     return NextResponse.json(
-      { success: false, error: "Valid userId and rentalId are required." },
+      { success: false, error: "Valid renterId and itemId are required." },
       { status: 400 }
     );
   }
 
   try {
-    const rental = await prisma.rental.findUnique({
-      where: { id: parsedRentalId },
-      include: { item: true },
-    });
-
-    if (!rental) {
-      return NextResponse.json(
-        { success: false, error: "Rental not found." },
-        { status: 404 }
-      );
-    }
-
     const existingReview = await prisma.review.findFirst({
       where: {
-        user: parsedUserId,
-        itemId: rental.item.id,
+        renterId: parseInt(renterId, 10),
+        itemId: parseInt(itemId, 10),
       },
       select: {
         id: true,
-        user: true,
-        name: true,
-        rating: true,
+        renterId: true,
+        trustScore: true,
         comment: true,
+        createdAt: true,
       },
     });
 
@@ -202,7 +174,7 @@ export async function GET(req: Request) {
     }
 
     return NextResponse.json(
-      { success: false, error: "No review found for this rental." },
+      { success: false, error: "No review found for this renter and item." },
       { status: 404 }
     );
   } catch (error) {
@@ -219,4 +191,21 @@ export async function GET(req: Request) {
       { status: 500 }
     );
   }
+}
+
+// Helper function to update renter's trust score
+async function updateRenterTrustScore(renterId: number) {
+  const { _avg: { trustScore: avgTrustScore } = {} } =
+    await prisma.review.aggregate({
+      _avg: { trustScore: true },
+      where: { renterId },
+    });
+
+  // Provide a fallback value of 0 if avgTrustScore is null
+  const calculatedTrustScore = Math.round(avgTrustScore ?? 0);
+
+  await prisma.user.update({
+    where: { id: renterId },
+    data: { trust_score: calculatedTrustScore },
+  });
 }

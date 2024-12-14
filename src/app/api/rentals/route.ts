@@ -114,7 +114,7 @@ export async function GET(req: Request) {
       rentals.map(async (rental) => {
         const hasReviewed = await prisma.review.findFirst({
           where: {
-            user: parsedUserId, // Ensure this is a number
+            renterId: parsedUserId, // Ensure this is a number
             itemId: rental.itemId, // Check reviews for the item
           },
         });

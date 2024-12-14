@@ -28,6 +28,7 @@ model User {
   trust_score Int?
   items       Item[]
   rentals     Rental[]
+  reviews     Review[] @relation("UserReviews") // Added relation to connect reviews by renter
 }
 
 model Item {
@@ -45,16 +46,16 @@ model Item {
   ownerId      Int
   owner        User     @relation(fields: [ownerId], references: [id])
   rentals      Rental[]
-  reviews      Review[]
+  reviews      Review[] @relation("ItemReviews") // Added explicit relation for item reviews
 }
 
 model Review {
-  id        Int      @id @default(autoincrement())
-  user      Int
-  name      String
-  comment   String
-  rating    Int
-  itemId    Int
-  createdAt DateTime @default(now())
-  item      Item     @relation(fields: [itemId], references: [id])
+  id         Int      @id @default(autoincrement())
+  renterId   Int      // Added renterId to identify the user being reviewed
+  trustScore Int      // Score (0-100)
+  comment    String
+  itemId     Int
+  createdAt  DateTime @default(now())
+  item       Item     @relation(fields: [itemId], references: [id], name: "ItemReviews") // Bidirectional relation with Item
+  renter     User     @relation(fields: [renterId], references: [id], name: "UserReviews") // Bidirectional relation with User
 }

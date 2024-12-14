@@ -13,13 +13,17 @@ type Rental = {
     url: string;
     price: number;
   };
+  user: {
+    id: number; // Renter's ID
+    username: string;
+    email: string;
+  };
   startDate: string;
   endDate: string;
   totalCost: number;
-  hasReviewed: boolean; // Field to determine if the user has reviewed
 };
 
-export default function HistoryPage() {
+export default function OwnerHistoryPage() {
   const { data: session } = useSession();
   const router = useRouter();
   const [rentals, setRentals] = useState<Rental[]>([]);
@@ -27,14 +31,21 @@ export default function HistoryPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function fetchHistory() {
+    async function fetchOwnerHistory() {
       try {
-        const response = await fetch(`/api/rentals?userId=${session?.user?.id}`);
-        if (!response.ok) {
-          throw new Error("Failed to fetch rental history");
+        if (!session?.user?.id) {
+          setError("You must be logged in to view this page.");
+          return;
         }
+
+        const response = await fetch(`/api/rentals/owner?ownerId=${session.user.id}`);
+        if (!response.ok) {
+          throw new Error("Failed to fetch rental history for owner");
+        }
+
         const result = await response.json();
-        console.log("Fetched rentals:", result.data); // Debug response
+        console.log("Fetched rentals for owner:", result.data); // Debug response
+
         if (Array.isArray(result.data)) {
           setRentals(result.data);
         } else {
@@ -49,7 +60,7 @@ export default function HistoryPage() {
     }
 
     if (session?.user?.id) {
-      fetchHistory();
+      fetchOwnerHistory();
     }
   }, [session?.user?.id]);
 
@@ -58,13 +69,13 @@ export default function HistoryPage() {
   }
 
   if (error) {
-    return <p>{error}</p>;
+    return <p className="text-red-500">{error}</p>;
   }
 
   return (
     <main className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-8 mt-16">
-        <h1 className="text-3xl font-bold mb-6 text-gray-800">Rental History</h1>
+        <h1 className="text-3xl font-bold mb-6 text-gray-800">Rental History (Owner)</h1>
         {rentals.length === 0 ? (
           <p className="text-gray-600">No rental history found.</p>
         ) : (
@@ -76,7 +87,7 @@ export default function HistoryPage() {
               >
                 <div className="flex items-center gap-4">
                   <Image
-                    src={rental.item.url}
+                    src={rental.item.url || "/images/default.png"} // Default image fallback
                     alt={rental.item.title}
                     width={148}
                     height={148}
@@ -86,6 +97,11 @@ export default function HistoryPage() {
                     <h2 className="text-xl font-semibold text-gray-800">
                       {rental.item.title}
                     </h2>
+                    <p className="text-gray-600">
+                      Rented by:{" "}
+                      <span className="font-semibold">{rental.user.username}</span> (
+                      {rental.user.email})
+                    </p>
                     <p className="text-gray-600">
                       Rental Period:{" "}
                       <span className="font-semibold">
@@ -99,18 +115,10 @@ export default function HistoryPage() {
                   </div>
                 </div>
                 <button
-                  onClick={() =>
-                    router.push(
-                      `/leave-review/${rental.id}?edit=${rental.hasReviewed}`
-                    )
-                  }
-                  className={`px-4 py-2 ${
-                    rental.hasReviewed
-                      ? "bg-yellow-500 hover:bg-yellow-600"
-                      : "bg-blue-500 hover:bg-blue-600"
-                  } text-white rounded-md transition`}
+                  onClick={() => router.push(`/review-renter/${rental.user.id}`)}
+                  className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md transition"
                 >
-                  {rental.hasReviewed ? "Edit Review" : "Leave a Review"}
+                  Review Renter
                 </button>
               </div>
             ))}

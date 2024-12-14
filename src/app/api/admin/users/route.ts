@@ -12,13 +12,16 @@ export async function GET() {
         username: true,
         email: true,
         role: true,
-        trust_score: true,
+        trust_score: true, // Include trust score for additional details
       },
     });
 
     return NextResponse.json(users);
   } catch (error) {
     console.error("Error fetching users:", error);
-    return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to fetch users" },
+      { status: 500 }
+    );
   }
 }

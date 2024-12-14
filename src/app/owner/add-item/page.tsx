@@ -18,7 +18,7 @@ export default function AddItem() {
 
     const numericPrice = parseFloat(price.replace(/[^\d]/g, ""));
     if (isNaN(numericPrice) || numericPrice <= 0) {
-      setMessage("Error: Price must be a positive number");
+      setMessage("Error: Price must be a positive number.");
       setIsSubmitting(false);
       return;
     }
@@ -30,11 +30,11 @@ export default function AddItem() {
     }
 
     const newItem = {
-      title: productName,
-      description,
+      title: productName.trim(),
+      description: description.trim(),
       price: numericPrice,
       category,
-      isAvailable: true, // Always available
+      isAvailable: true,
       url: "/images/bike.webp", // Default image
     };
 
@@ -55,22 +55,26 @@ export default function AddItem() {
         setCategory("");
       } else {
         const errorData = await response.json();
-        setMessage(`Error: ${errorData.error || "Unable to add product"}`);
+        setMessage(`Error: ${errorData.error || "Unable to add product."}`);
       }
-    } catch {
-      setMessage("Error: Something went wrong");
+    } catch (error) {
+      console.error("Error adding product:", error);
+      setMessage("Error: Something went wrong.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleCategoryInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setCategory(e.target.value);
+    setCategory(e.target.value.trim());
   };
 
   const handleAddCategory = () => {
     if (category && !categories.includes(category)) {
-      setCategories([...categories, category]);
+      setCategories((prevCategories) => [...prevCategories, category]);
+      setCategory(""); // Clear input after adding
+    } else if (!category) {
+      setMessage("Error: Please enter a valid category.");
     }
   };
 
