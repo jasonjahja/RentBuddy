@@ -39,6 +39,7 @@ export async function POST(req: Request) {
       );
     }
 
+    // Find the rental and associated item
     const rental = await prisma.rental.findUnique({
       where: { id: parsedRentalId },
       include: { item: true },
@@ -53,6 +54,7 @@ export async function POST(req: Request) {
 
     const itemId = rental.item.id;
 
+    // Check if the renter has already left a review for this rental's item
     const existingReview = await prisma.itemReview.findFirst({
       where: {
         renterId: parsedRenterId,
@@ -61,6 +63,7 @@ export async function POST(req: Request) {
     });
 
     if (existingReview) {
+      // Update the existing review
       const updatedReview = await prisma.itemReview.update({
         where: { id: existingReview.id },
         data: { rating, comment },
@@ -73,6 +76,7 @@ export async function POST(req: Request) {
       });
     }
 
+    // Create a new review
     const newReview = await prisma.itemReview.create({
       data: {
         renterId: parsedRenterId,
@@ -103,34 +107,64 @@ export async function POST(req: Request) {
   }
 }
 
-// PUT: Update an item review
-export async function PUT(req: Request) {
+// GET: Fetch the review for a rental
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const rentalId = searchParams.get("rentalId");
+
+  const parsedRentalId = parseInt(rentalId || "", 10);
+
+  if (isNaN(parsedRentalId)) {
+    return NextResponse.json(
+      { success: false, error: "Valid rentalId is required." },
+      { status: 400 }
+    );
+  }
+
   try {
-    const body = await req.json();
-    const { reviewId, rating, comment } = body;
+    // Fetch the rental details to get itemId and renterId
+    const rental = await prisma.rental.findUnique({
+      where: { id: parsedRentalId },
+      include: {
+        item: true,
+        user: true, // Includes renter information
+      },
+    });
 
-    console.log("Received Payload for PUT:", { reviewId, rating, comment });
-
-    if (!reviewId || !rating || rating < 1 || rating > 5 || !comment) {
+    if (!rental) {
       return NextResponse.json(
-        {
-          success: false,
-          error: "Invalid input. Ensure all fields are provided and valid.",
-        },
-        { status: 400 }
+        { success: false, error: "Rental not found." },
+        { status: 404 }
       );
     }
 
-    const updatedReview = await prisma.itemReview.update({
-      where: { id: reviewId },
-      data: { rating, comment },
+    // Use itemId and renterId from the rental to fetch the review
+    const existingReview = await prisma.itemReview.findFirst({
+      where: {
+        renterId: rental.userId,
+        itemId: rental.itemId,
+      },
+      include: {
+        renter: {
+          select: { username: true }, // Include renter's username
+        },
+      },
     });
 
-    return NextResponse.json({
-      success: true,
-      message: "Review updated successfully.",
-      data: updatedReview,
-    });
+    if (existingReview) {
+      return NextResponse.json({
+        success: true,
+        data: {
+          ...existingReview,
+          renterName: existingReview.renter?.username || rental.user?.username || null,
+        },
+      });
+    }
+
+    return NextResponse.json(
+      { success: false, error: "No review found for this rental." },
+      { status: 404 }
+    );
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       console.error("Prisma error:", error.message);
@@ -147,45 +181,62 @@ export async function PUT(req: Request) {
   }
 }
 
-// GET: Fetch the review for an item
-export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url);
-  const renterId = searchParams.get("renterId");
-  const itemId = searchParams.get("itemId");
-
-  const parsedRenterId = parseInt(renterId || "", 10);
-  const parsedItemId = parseInt(itemId || "", 10);
-
-  if (isNaN(parsedRenterId) || isNaN(parsedItemId)) {
-    return NextResponse.json(
-      { success: false, error: "Valid renterId and itemId are required." },
-      { status: 400 }
-    );
-  }
-
+// PUT: Update an item review
+export async function PUT(req: Request) {
   try {
+    const body = await req.json();
+    const { rentalId, rating, comment } = body;
+
+    if (!rentalId || isNaN(rating) || rating < 1 || rating > 5 || !comment) {
+      return NextResponse.json(
+        { success: false, error: "Invalid input. Ensure all fields are provided and valid." },
+        { status: 400 }
+      );
+    }
+
+    const parsedRentalId = parseInt(rentalId, 10);
+
+    // Fetch the rental to get the renterId and itemId
+    const rental = await prisma.rental.findUnique({
+      where: { id: parsedRentalId },
+      include: { item: true },
+    });
+
+    if (!rental) {
+      return NextResponse.json(
+        { success: false, error: "Rental not found." },
+        { status: 404 }
+      );
+    }
+
+    const { itemId, userId: renterId } = rental;
+
+    // Check if the review exists
     const existingReview = await prisma.itemReview.findFirst({
       where: {
-        renterId: parsedRenterId,
-        itemId: parsedItemId,
-      },
-      select: {
-        id: true,
-        renterId: true,
-        rating: true,
-        comment: true,
-        createdAt: true,
+        renterId,
+        itemId,
       },
     });
 
-    if (existingReview) {
-      return NextResponse.json({ success: true, data: existingReview });
+    if (!existingReview) {
+      return NextResponse.json(
+        { success: false, error: "Review not found for this rental." },
+        { status: 404 }
+      );
     }
 
-    return NextResponse.json(
-      { success: false, error: "No review found for this item." },
-      { status: 404 }
-    );
+    // Update the review
+    const updatedReview = await prisma.itemReview.update({
+      where: { id: existingReview.id },
+      data: { rating, comment },
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: "Review updated successfully.",
+      data: updatedReview,
+    });
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       console.error("Prisma error:", error.message);

@@ -1,14 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function ReviewRenterPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const renterId = searchParams.get("renterId");
 
+  const [renterId, setRenterId] = useState<string | null>(null); // Store renterId in state
   const [trustScore, setTrustScore] = useState(50);
   const [comment, setComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -16,10 +15,16 @@ export default function ReviewRenterPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!renterId || isNaN(parseInt(renterId))) {
-      setError("Invalid renter ID.");
+    const renterIdFromParams = searchParams.get("renterId");
+
+    // Validate and set renterId in state
+    if (renterIdFromParams && !isNaN(parseInt(renterIdFromParams, 10))) {
+      setRenterId(renterIdFromParams);
+      setError("");
+    } else {
+      setError("Invalid or missing renter ID.");
     }
-  }, [renterId]);
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,7 +66,11 @@ export default function ReviewRenterPage() {
   };
 
   if (error) {
-    return <p className="text-red-500">{error}</p>;
+    return (
+      <main className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
+        <p className="text-red-500">{error}</p>
+      </main>
+    );
   }
 
   return (

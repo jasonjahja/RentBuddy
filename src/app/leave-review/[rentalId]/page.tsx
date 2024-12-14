@@ -19,26 +19,40 @@ export default function LeaveReviewPage() {
   useEffect(() => {
     async function fetchExistingReview() {
       try {
+        if (!rentalId || !session?.user?.id) {
+          console.error("Missing rentalId or userId");
+          return;
+        }
+  
         const response = await fetch(
-          `/api/reviews?rentalId=${rentalId}&userId=${session?.user?.id}`
+          `/api/reviews?rentalId=${rentalId}&userId=${session.user.id}`
         );
-        if (response.ok) {
-          const { success, data } = await response.json();
-          if (success && data) {
-            setRating(data.rating);
-            setReviewText(data.comment);
-            setIsEditMode(true);
-          }
+  
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to fetch review");
+        }
+  
+        const { success, data } = await response.json();
+  
+        if (success && data) {
+          console.log("Fetched review:", data);
+          setRating(data.rating);
+          setReviewText(data.comment);
+          setIsEditMode(true);
+        } else {
+          console.log("No review found for rentalId:", rentalId);
         }
       } catch (err) {
-        console.error("Failed to fetch existing review:", err);
+        console.error("Error fetching review:", err);
       }
     }
-
+  
     if (session?.user?.id && rentalId) {
       fetchExistingReview();
     }
   }, [rentalId, session?.user?.id]);
+  
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,7 +69,7 @@ export default function LeaveReviewPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          userId: session?.user?.id,
+          renterId: session?.user?.id,
           name: session?.user?.username, // Include the user's name
           rentalId: parseInt(rentalId, 10),
           rating,

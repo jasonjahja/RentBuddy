@@ -62,11 +62,21 @@ export async function GET(req: Request) {
     const url = new URL(req.url);
     const slug = url.searchParams.get("slug");
 
-    // If a specific item slug is requested
     if (slug) {
       const item = await prisma.item.findUnique({
         where: { slug },
-        include: { itemReviews: true }, // Include itemReviews instead of reviews
+        include: {
+          itemReviews: {
+            select: {
+              id: true,
+              rating: true,
+              comment: true,
+              renter: {
+                select: { username: true },
+              },
+            },
+          },
+        },
       });
 
       if (!item) {
@@ -79,17 +89,31 @@ export async function GET(req: Request) {
       return NextResponse.json(item, { status: 200 });
     }
 
-    // Fetch all items if no slug is provided
     const items = await prisma.item.findMany({
-      include: { itemReviews: true }, // Include itemReviews instead of reviews
+      include: {
+        itemReviews: {
+          select: {
+            id: true,
+            rating: true,
+            comment: true,
+            renter: {
+              select: { username: true },
+            },
+          },
+        },
+      },
     });
 
     return NextResponse.json(items, { status: 200 });
-  } catch (error) {
-    console.error("Error fetching items:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+  } catch (err) {
+    console.error("Error fetching items:", err);
+
+    // Safeguard against non-object `err` values
+    const errorResponse = {
+      error: "Internal server error",
+      details: err instanceof Error ? err.message : "Unknown error occurred",
+    };
+
+    return NextResponse.json(errorResponse, { status: 500 });
   }
 }

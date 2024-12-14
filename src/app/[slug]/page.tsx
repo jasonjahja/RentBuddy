@@ -6,7 +6,7 @@ import { useSession } from "next-auth/react";
 import Image from "next/image";
 
 type Review = {
-  name: string;
+  username: string;
   comment: string;
   rating: number;
 };
@@ -21,7 +21,7 @@ type Item = {
   url: string;
   ownerId: string;
   rentDuration?: number | null;
-  reviews: Review[];
+  itemReviews: Review[];
 };
 
 export default function ItemDetailPage() {
@@ -105,8 +105,8 @@ export default function ItemDetailPage() {
   };
 
   const filteredReviews = filteredRating
-    ? item?.reviews.filter((review) => review.rating === filteredRating)
-    : item?.reviews;
+    ? item?.itemReviews.filter((review) => review.rating === filteredRating)
+    : item?.itemReviews;
 
   if (loading) {
     return <p>Loading...</p>;
@@ -233,7 +233,7 @@ export default function ItemDetailPage() {
               <ul className="space-y-4">
                 {filteredReviews.map((review, index) => (
                   <li key={index} className="bg-white p-4 rounded-md shadow">
-                    <p className="font-semibold">{review.name}</p>
+                    <p className="font-semibold">{review.username}</p>
                     <p className="text-yellow-500">
                       {"★".repeat(review.rating)}
                       {"☆".repeat(5 - review.rating)}

@@ -4,11 +4,19 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 // DELETE: Delete an item
-export async function DELETE(
-  req: Request,
-) {
-  const { itemId }  = await req.json()
+export async function DELETE(req: Request) {
   try {
+    // Extract the item ID directly from the request URL
+    const url = new URL(req.url);
+    const id = url.pathname.split("/").pop(); // Get the last part of the URL
+
+    if (!id || isNaN(parseInt(id, 10))) {
+      return NextResponse.json({ error: "Invalid item ID" }, { status: 400 });
+    }
+
+    const itemId = parseInt(id, 10);
+
+    // Delete the item
     await prisma.item.delete({
       where: { id: itemId },
     });

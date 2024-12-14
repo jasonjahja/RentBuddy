@@ -16,7 +16,7 @@ type Rental = {
   startDate: string;
   endDate: string;
   totalCost: number;
-  hasReviewed: boolean; // Field to determine if the user has reviewed
+  hasReviewed: boolean; // Indicates if the user has left a review
 };
 
 export default function HistoryPage() {

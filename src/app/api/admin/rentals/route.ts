@@ -5,25 +5,25 @@ const prisma = new PrismaClient();
 
 export async function GET() {
   try {
-    const items = await prisma.item.findMany({
+    const rentals = await prisma.rental.findMany({
       include: {
-        owner: true, // Adjust according to your schema
-        itemReviews: true,
+        user: true,
+        item: true,
       },
     });
 
-    if (!items) {
+    if (!rentals) {
       return NextResponse.json(
-        { error: "No items found." },
+        { error: "No rentals found." },
         { status: 404 }
       );
     }
 
-    return NextResponse.json(items);
+    return NextResponse.json(rentals);
   } catch (error) {
-    console.error("Error fetching items:", error);
+    console.error("Error fetching rentals:", error);
     return NextResponse.json(
-      { error: "Failed to fetch items." },
+      { error: "Failed to fetch rentals." },
       { status: 500 }
     );
   }
