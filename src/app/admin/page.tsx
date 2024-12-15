@@ -170,6 +170,7 @@ export default function AdminPage() {
                   <th className="border-b px-4 py-2">Price</th>
                   <th className="border-b px-4 py-2">Available</th>
                   <th className="border-b px-4 py-2">Owner ID</th>
+                  <th className="border-b px-4 py-2">Slug</th>
                 </tr>
               </thead>
               <tbody>
@@ -188,6 +189,7 @@ export default function AdminPage() {
                       {item.isAvailable ? "Yes" : "No"}
                     </td>
                     <td className="border-b px-4 py-2">{item.ownerId ?? "N/A"}</td>
+                    <td className="border-b px-4 py-2">{item.slug}</td>
                   </tr>
                 ))}
               </tbody>
