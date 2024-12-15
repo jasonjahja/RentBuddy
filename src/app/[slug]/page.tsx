@@ -6,9 +6,11 @@ import { useSession } from "next-auth/react";
 import Image from "next/image";
 
 type Review = {
-  username: string;
   comment: string;
   rating: number;
+  renter: {
+    username: string;
+  };
 };
 
 type Item = {
@@ -34,6 +36,7 @@ export default function ItemDetailPage() {
   const [isOwner, setIsOwner] = useState(false);
   const [filteredRating, setFilteredRating] = useState<number | null>(null);
   const [showLoginPopup, setShowLoginPopup] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   useEffect(() => {
     async function fetchItem() {
@@ -61,27 +64,27 @@ export default function ItemDetailPage() {
     if (slug) {
       fetchItem();
     }
+    
   }, [slug, session?.user?.id]);
 
   const handleDelete = async () => {
-    const confirmDelete = confirm("Are you sure you want to delete this item?");
-    if (confirmDelete) {
-      try {
-        const response = await fetch(`/api/items/${item?.id}`, {
-          method: "DELETE",
-        });
+    try {
+      const response = await fetch(`/api/items/${item?.id}`, {
+        method: "DELETE",
+      });
 
-        if (response.ok) {
-          alert("Item deleted successfully!");
-          router.push("/"); // Redirect to owner's page after deletion
-        } else {
-          const errorData = await response.json();
-          alert(`Failed to delete item: ${errorData.error || "Unknown error"}`);
-        }
-      } catch (err) {
-        console.error("Error deleting item:", err);
-        alert("An unexpected error occurred while deleting the item.");
+      if (response.ok) {
+        alert("Item deleted successfully!");
+        router.push("/"); // Redirect to owner's page after deletion
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to delete item: ${errorData.error || "Unknown error"}`);
       }
+    } catch (err) {
+      console.error("Error deleting item:", err);
+      alert("An unexpected error occurred while deleting the item.");
+    } finally {
+      setShowDeleteModal(false);
     }
   };
 
@@ -99,7 +102,7 @@ export default function ItemDetailPage() {
       router.push(`/rent/${slug}`);
     }
   };
-  
+
   const handleClosePopup = () => {
     setShowLoginPopup(false);
   };
@@ -192,7 +195,7 @@ export default function ItemDetailPage() {
                   Edit
                 </button>
                 <button
-                  onClick={handleDelete}
+                  onClick={() => setShowDeleteModal(true)}
                   className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition w-52"
                 >
                   Delete
@@ -233,7 +236,7 @@ export default function ItemDetailPage() {
               <ul className="space-y-4">
                 {filteredReviews.map((review, index) => (
                   <li key={index} className="bg-white p-4 rounded-md shadow">
-                    <p className="font-semibold">{review.username}</p>
+                    <p className="font-semibold">{review.renter?.username}</p>
                     <p className="text-yellow-500">
                       {"★".repeat(review.rating)}
                       {"☆".repeat(5 - review.rating)}
@@ -248,10 +251,42 @@ export default function ItemDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">
+              Confirm Delete
+            </h2>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete this item? This action cannot be
+              undone.
+            </p>
+            <div className="flex gap-4 justify-end">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="bg-gray-300 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-400 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showLoginPopup && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full text-center">
-            <h2 className="text-xl font-bold text-gray-800 mb-4">Log In Required</h2>
+            <h2 className="text-xl font-bold text-gray-800 mb-4">
+              Log In Required
+            </h2>
             <p className="text-gray-600 mb-6">
               To rent this item, please log in or sign up for an account.
             </p>

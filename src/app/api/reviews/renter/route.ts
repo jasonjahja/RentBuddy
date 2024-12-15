@@ -1,11 +1,22 @@
 import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
+import { auth } from "@/auth"; // Replace with your actual auth import
 
 const prisma = new PrismaClient();
 
 export async function POST(req: Request) {
   try {
-    const { renterId, trustScore, comment, ownerId } = await req.json();
+    const session = await auth();
+
+    if (!session || !session.user) {
+      return NextResponse.json(
+        { error: "Unauthorized. Please log in." },
+        { status: 401 }
+      );
+    }
+
+    const { renterId, trustScore, comment } = await req.json();
+    const ownerId = parseInt(session.user.id, 10);
 
     // Validate input
     if (!renterId || typeof renterId !== "number") {
@@ -29,41 +40,74 @@ export async function POST(req: Request) {
       );
     }
 
-    if (!ownerId || typeof ownerId !== "number") {
+    // Validate renterId and ownerId existence
+    const renterExists = await prisma.user.findUnique({
+      where: { id: renterId },
+    });
+    if (!renterExists) {
       return NextResponse.json(
-        { error: "Invalid ownerId. It must be a valid user ID." },
+        { error: "Renter does not exist." },
+        { status: 404 }
+      );
+    }
+
+    const ownerExists = await prisma.user.findUnique({
+      where: { id: ownerId },
+    });
+    if (!ownerExists) {
+      return NextResponse.json(
+        { error: "Owner does not exist." },
+        { status: 404 }
+      );
+    }
+
+    // Check for duplicate reviews
+    const existingReview = await prisma.renterReview.findFirst({
+      where: {
+        renterId,
+        ownerId,
+      },
+    });
+    if (existingReview) {
+      return NextResponse.json(
+        { error: "You have already reviewed this renter." },
         { status: 400 }
       );
     }
 
-    // Create a new renter review
-    await prisma.renterReview.create({
-      data: {
-        comment,
-        trustScore,
-        renter: { connect: { id: renterId } }, // Connect to the renter being reviewed
-        owner: { connect: { id: ownerId } },   // Connect to the owner giving the review
-      },
-    });
+    // Create review and update trust score in a transaction
+    const avgTrustScoreResult = await prisma.$transaction([
+      prisma.renterReview.create({
+        data: {
+          comment,
+          trustScore,
+          renter: { connect: { id: renterId } },
+          owner: { connect: { id: ownerId } },
+        },
+      }),
+      prisma.renterReview.aggregate({
+        _avg: { trustScore: true },
+        where: { renterId },
+      }),
+    ]);
 
-    // Calculate the updated trust score for the renter
-    const avgTrustScoreResult = await prisma.renterReview.aggregate({
-      _avg: { trustScore: true },
-      where: { renterId },
-    });
+    const avgTrustScore = avgTrustScoreResult[1]._avg?.trustScore || 0;
 
-    // Handle undefined _avg
-    const avgTrustScore = avgTrustScoreResult._avg?.trustScore || 0;
-
-    // Update the renter's trust score in the `User` model
+    // Update the renter's trust score
     await prisma.user.update({
       where: { id: renterId },
       data: { trust_score: Math.round(avgTrustScore) },
     });
 
-    return NextResponse.json({ message: "Review submitted successfully." });
+    return NextResponse.json({
+      message: "Review submitted successfully.",
+      updatedTrustScore: Math.round(avgTrustScore),
+    });
   } catch (error) {
     console.error("Error submitting review:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }
