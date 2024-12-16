@@ -21,7 +21,9 @@ type Item = {
   category: string;
   isAvailable: boolean;
   url: string;
-  ownerId: string;
+  owner: {
+    username: string; // Owner's username
+  };
   rentDuration?: number | null;
   itemReviews: Review[];
 };
@@ -165,6 +167,10 @@ export default function ItemDetailPage() {
             )}
             <h1 className="text-3xl font-bold mb-4">{item.title}</h1>
             <p className="text-gray-700 mb-4">{item.description}</p>
+            <p className="text-sm text-gray-500 mb-4">
+              Owner:{" "}
+              <span className="font-semibold text-gray-800">{item.owner.username}</span>
+            </p>
             <p className="text-2xl font-bold text-blue-500 mb-4">
               Price: Rp {item.price.toLocaleString("id-ID", { minimumFractionDigits: 2 })}
             </p>

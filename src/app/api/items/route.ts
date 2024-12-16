@@ -66,6 +66,9 @@ export async function GET(req: Request) {
       const item = await prisma.item.findUnique({
         where: { slug },
         include: {
+          owner: {
+            select: { username: true }, // Fetch the owner's username
+          },
           itemReviews: {
             select: {
               id: true,
@@ -91,6 +94,9 @@ export async function GET(req: Request) {
 
     const items = await prisma.item.findMany({
       include: {
+        owner: {
+          select: { username: true }, // Fetch the owner's username
+        },
         itemReviews: {
           select: {
             id: true,
