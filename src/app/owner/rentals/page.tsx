@@ -7,7 +7,11 @@ import Image from "next/image";
 
 type Rental = {
   id: number;
+  startDate: string;
+  endDate: string;
+  totalCost: number;
   item: {
+    id: number;
     title: string;
     description: string;
     url: string;
@@ -18,9 +22,6 @@ type Rental = {
     username: string;
     email: string;
   };
-  startDate: string;
-  endDate: string;
-  totalCost: number;
 };
 
 export default function OwnerHistoryPage() {
@@ -38,6 +39,7 @@ export default function OwnerHistoryPage() {
           return;
         }
 
+        // Fetch rentals where the ownerId matches the logged-in user's ID
         const response = await fetch(`/api/rentals/owner?ownerId=${session.user.id}`);
         if (!response.ok) {
           throw new Error("Failed to fetch rental history for owner");
@@ -114,11 +116,12 @@ export default function OwnerHistoryPage() {
                     </p>
                   </div>
                 </div>
+                {/* Updated Button with Yellow Color and Text */}
                 <button
-                  onClick={() => router.push(`/review-renter/${rental.user.id}`)}
-                  className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md transition"
+                  onClick={() => router.push(`/owner/rentals/${rental.id}`)}
+                  className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-md transition"
                 >
-                  Review Renter
+                  Edit Review
                 </button>
               </div>
             ))}
