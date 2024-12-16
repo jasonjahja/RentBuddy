@@ -42,7 +42,7 @@ type Rental = {
   };
 };
 
-type Review = {
+type ItemReview = {
   id: number;
   rating: number;
   comment: string;
@@ -56,13 +56,29 @@ type Review = {
   };
 };
 
+type RenterReview = {
+  id: number;
+  trustScore: number;
+  comment: string;
+  createdAt: string;
+  renter: {
+    username: string;
+    email: string;
+  };
+  owner: {
+    username: string;
+    email: string;
+  };
+};
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000";
 
 export default function AdminPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [items, setItems] = useState<Item[]>([]);
   const [rentals, setRentals] = useState<Rental[]>([]);
-  const [reviews, setReviews] = useState<Review[]>([]);
+  const [itemReviews, setItemReviews] = useState<ItemReview[]>([]);
+  const [renterReviews, setRenterReviews] = useState<RenterReview[]>([]); // Added state for renter reviews
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -72,27 +88,37 @@ export default function AdminPage() {
       setError(null);
 
       try {
-        const [usersResponse, itemsResponse, rentalsResponse, reviewsResponse] = await Promise.all([
+        const [
+          usersResponse,
+          itemsResponse,
+          rentalsResponse,
+          itemReviewsResponse,
+          renterReviewsResponse,
+        ] = await Promise.all([
           fetch(`${API_BASE_URL}/api/admin/users`),
           fetch(`${API_BASE_URL}/api/admin/items`),
           fetch(`${API_BASE_URL}/api/admin/rentals`),
           fetch(`${API_BASE_URL}/api/admin/reviews`),
+          fetch(`${API_BASE_URL}/api/admin/renter-reviews`), // Fetch Renter Reviews
         ]);
 
         if (!usersResponse.ok) throw new Error("Failed to fetch users data");
         if (!itemsResponse.ok) throw new Error("Failed to fetch items data");
         if (!rentalsResponse.ok) throw new Error("Failed to fetch rentals data");
-        if (!reviewsResponse.ok) throw new Error("Failed to fetch reviews data");
+        if (!itemReviewsResponse.ok) throw new Error("Failed to fetch item reviews data");
+        if (!renterReviewsResponse.ok) throw new Error("Failed to fetch renter reviews data");
 
         const usersData: User[] = await usersResponse.json();
         const itemsData: Item[] = await itemsResponse.json();
         const rentalsData: Rental[] = await rentalsResponse.json();
-        const reviewsData: Review[] = await reviewsResponse.json();
+        const itemReviewsData: ItemReview[] = await itemReviewsResponse.json();
+        const renterReviewsData: RenterReview[] = await renterReviewsResponse.json();
 
         setUsers(usersData);
         setItems(itemsData);
         setRentals(rentalsData);
-        setReviews(reviewsData);
+        setItemReviews(itemReviewsData);
+        setRenterReviews(renterReviewsData); // Set Renter Reviews data
       } catch (err) {
         console.error("Fetch Error:", err);
         setError((err as Error).message);
@@ -240,11 +266,11 @@ export default function AdminPage() {
         </div>
       </section>
 
-      {/* Reviews Section */}
-      <section>
-        <h2 className="text-2xl font-semibold mb-4">Reviews</h2>
+      {/* Item Reviews Section */}
+      <section className="mb-12">
+        <h2 className="text-2xl font-semibold mb-4">Item Reviews</h2>
         <div className="overflow-x-auto bg-white shadow-md rounded-lg">
-          {reviews.length === 0 ? (
+          {itemReviews.length === 0 ? (
             <p className="p-4 text-center text-gray-500">No reviews found.</p>
           ) : (
             <table className="w-full text-left border-collapse">
@@ -259,7 +285,7 @@ export default function AdminPage() {
                 </tr>
               </thead>
               <tbody>
-                {reviews.map((review, idx) => (
+                {itemReviews.map((review, idx) => (
                   <tr
                     key={review.id}
                     className={idx % 2 === 0 ? "bg-gray-50" : "bg-white"}
@@ -270,6 +296,50 @@ export default function AdminPage() {
                       {review.renter.username} ({review.renter.email})
                     </td>
                     <td className="border-b px-4 py-2">{review.rating}</td>
+                    <td className="border-b px-4 py-2">{review.comment}</td>
+                    <td className="border-b px-4 py-2">
+                      {new Date(review.createdAt).toLocaleDateString("id-ID")}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </section>
+
+      {/* Renter Reviews Section */}
+      <section>
+        <h2 className="text-2xl font-semibold mb-4">Renter Reviews</h2>
+        <div className="overflow-x-auto bg-white shadow-md rounded-lg">
+          {renterReviews.length === 0 ? (
+            <p className="p-4 text-center text-gray-500">No renter reviews found.</p>
+          ) : (
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr>
+                  <th className="border-b px-4 py-2">Review ID</th>
+                  <th className="border-b px-4 py-2">Renter</th>
+                  <th className="border-b px-4 py-2">Owner</th>
+                  <th className="border-b px-4 py-2">Trust Score</th>
+                  <th className="border-b px-4 py-2">Comment</th>
+                  <th className="border-b px-4 py-2">Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {renterReviews.map((review, idx) => (
+                  <tr
+                    key={review.id}
+                    className={idx % 2 === 0 ? "bg-gray-50" : "bg-white"}
+                  >
+                    <td className="border-b px-4 py-2">{review.id}</td>
+                    <td className="border-b px-4 py-2">
+                      {review.renter.username} ({review.renter.email})
+                    </td>
+                    <td className="border-b px-4 py-2">
+                      {review.owner.username} ({review.owner.email})
+                    </td>
+                    <td className="border-b px-4 py-2">{review.trustScore}</td>
                     <td className="border-b px-4 py-2">{review.comment}</td>
                     <td className="border-b px-4 py-2">
                       {new Date(review.createdAt).toLocaleDateString("id-ID")}

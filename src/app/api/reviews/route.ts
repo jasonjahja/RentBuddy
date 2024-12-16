@@ -221,8 +221,12 @@ export async function PUT(req: Request) {
 
     if (!existingReview) {
       return NextResponse.json(
-        { success: false, error: "Review not found for this rental." },
-        { status: 404 }
+        {
+          success: true, // Treat as a successful response
+          data: null,    // Indicate no data was found
+          message: "No review found for this rental.",
+        },
+        { status: 200 }  // Return 200 OK
       );
     }
 
