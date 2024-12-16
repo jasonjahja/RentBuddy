@@ -7,31 +7,31 @@ const prisma = new PrismaClient();
  * GET /api/rentals/[rentalId]
  * Fetch rental details by rentalId.
  */
-export async function GET(
-  req: Request,
-  { params }: { params: { rentalId: string } }
-) {
+export async function GET(req: Request) {
   try {
-    const rentalId = parseInt(params.rentalId, 10);
+    // Extract the 'rentalId' parameter from the URL
+    const url = new URL(req.url);
+    const rentalId = url.pathname.split('/').pop(); // Extract the last part of the URL
 
-    // Validate rentalId
-    if (isNaN(rentalId)) {
+    // Validate the 'rentalId' parameter
+    const parsedRentalId = parseInt(rentalId || "", 10);
+    if (isNaN(parsedRentalId)) {
       return NextResponse.json(
-        { error: "Invalid rental ID." },
+        { error: "Invalid or missing rental ID. Must be a valid number." },
         { status: 400 }
       );
     }
 
-    // Fetch rental details
+    // Fetch the rental details from the database
     const rental = await prisma.rental.findUnique({
-      where: { id: rentalId },
+      where: { id: parsedRentalId },
       include: {
         item: true, // Include associated item details
         user: true, // Include associated renter details
       },
     });
 
-    // Handle not found
+    // Handle rental not found
     if (!rental) {
       return NextResponse.json(
         { success: false, error: "Rental not found." },
@@ -39,7 +39,7 @@ export async function GET(
       );
     }
 
-    // Return rental details
+    // Return rental details as JSON
     return NextResponse.json({ success: true, data: rental }, { status: 200 });
   } catch (error) {
     console.error("Error fetching rental:", error);
