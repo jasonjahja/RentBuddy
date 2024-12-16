@@ -4,6 +4,10 @@ import { auth } from "@/auth";
 
 const prisma = new PrismaClient();
 
+/**
+ * POST /api/items
+ * Create a new item and provide a recommended price based on the category.
+ */
 export async function POST(req: Request) {
   try {
     const session = await auth();
@@ -33,6 +37,13 @@ export async function POST(req: Request) {
       .replace(/\s+/g, "-")
       .replace(/[^\w-]+/g, "");
 
+    // Fetch average price for the category to recommend a price
+    const categoryPricing = await prisma.item.aggregate({
+      where: { category },
+      _avg: { price: true },
+    });
+    const recommendedPrice = categoryPricing._avg.price || price;
+
     // Create a new item in the database
     const newItem = await prisma.item.create({
       data: {
@@ -47,7 +58,10 @@ export async function POST(req: Request) {
       },
     });
 
-    return NextResponse.json(newItem, { status: 201 });
+    return NextResponse.json(
+      { item: newItem, recommendedPrice },
+      { status: 201 }
+    );
   } catch (error) {
     console.error("Error creating new item:", error);
     return NextResponse.json(
@@ -57,6 +71,10 @@ export async function POST(req: Request) {
   }
 }
 
+/**
+ * GET /api/items
+ * Fetch all items or a single item by slug.
+ */
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url);

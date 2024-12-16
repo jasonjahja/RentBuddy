@@ -6,6 +6,7 @@ export default function AddItem() {
   const [productName, setProductName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
+  const [recommendedPrice, setRecommendedPrice] = useState<number | null>(null); // Recommended price
   const [category, setCategory] = useState("");
   const [categories, setCategories] = useState<string[]>(["Outdoor", "Electronics", "Home", "Transport"]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -53,6 +54,7 @@ export default function AddItem() {
         setDescription("");
         setPrice("");
         setCategory("");
+        setRecommendedPrice(null); // Reset recommended price
       } else {
         const errorData = await response.json();
         setMessage(`Error: ${errorData.error || "Unable to add product."}`);
@@ -65,8 +67,32 @@ export default function AddItem() {
     }
   };
 
+  const handleCategoryChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedCategory = e.target.value;
+    setCategory(selectedCategory);
+
+    // Fetch the recommended price for the selected category
+    if (selectedCategory) {
+      try {
+        const response = await fetch(`/api/recommendations?category=${selectedCategory}`);
+        if (response.ok) {
+          const { recommendedPrice } = await response.json();
+          setRecommendedPrice(recommendedPrice || null);
+        } else {
+          setRecommendedPrice(null);
+        }
+      } catch (err) {
+        console.error("Error fetching recommended price:", err);
+        setRecommendedPrice(null);
+      }
+    } else {
+      setRecommendedPrice(null);
+    }
+  };
+
   const handleCategoryInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCategory(e.target.value.trim());
+    setRecommendedPrice(null); // Reset recommended price when adding a new category
   };
 
   const handleAddCategory = () => {
@@ -117,6 +143,40 @@ export default function AddItem() {
             />
           </div>
           <div className="mb-4">
+            <label htmlFor="category" className="block text-sm font-medium text-gray-700">
+              Category
+            </label>
+            <div className="flex gap-2">
+              <select
+                id="category"
+                value={category}
+                onChange={handleCategoryChange}
+                className="w-2/3 border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Select a category</option>
+                {categories.map((cat, index) => (
+                  <option key={index} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
+              <input
+                type="text"
+                placeholder="Add new category"
+                value={category}
+                onChange={handleCategoryInput}
+                className="w-1/3 border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <button
+                type="button"
+                onClick={handleAddCategory}
+                className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition"
+              >
+                Add
+              </button>
+            </div>
+          </div>
+          <div className="mb-4">
             <label htmlFor="description" className="block text-sm font-medium text-gray-700">
               Description
             </label>
@@ -142,40 +202,11 @@ export default function AddItem() {
               className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Enter price"
             />
-          </div>
-          <div className="mb-4">
-            <label htmlFor="category" className="block text-sm font-medium text-gray-700">
-              Category
-            </label>
-            <div className="flex gap-2">
-              <select
-                id="category"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="w-2/3 border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Select a category</option>
-                {categories.map((cat, index) => (
-                  <option key={index} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
-              <input
-                type="text"
-                placeholder="Add new category"
-                value={category}
-                onChange={handleCategoryInput}
-                className="w-1/3 border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <button
-                type="button"
-                onClick={handleAddCategory}
-                className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition"
-              >
-                Add
-              </button>
-            </div>
+            {recommendedPrice && (
+              <p className="text-sm text-gray-500 mt-2">
+                Recommended Price: Rp {recommendedPrice.toLocaleString("id-ID")}
+              </p>
+            )}
           </div>
           <button
             type="submit"
