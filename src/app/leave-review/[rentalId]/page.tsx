@@ -28,6 +28,13 @@ export default function LeaveReviewPage() {
           `/api/reviews?rentalId=${rentalId}&userId=${session.user.id}`
         );
   
+        if (response.status === 404) {
+          // No review found, handle gracefully
+          console.log("No review found for this rental.");
+          setIsEditMode(false);
+          return;
+        }
+  
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(errorData.error || "Failed to fetch review");
@@ -41,19 +48,18 @@ export default function LeaveReviewPage() {
           setReviewText(data.comment);
           setIsEditMode(true);
         } else {
-          console.log("No review found for this rental.");
           setIsEditMode(false);
         }
-        
       } catch (err) {
         console.error("Error fetching review:", err);
+        setError("Failed to load the review. Please try again later.");
       }
     }
   
     if (session?.user?.id && rentalId) {
       fetchExistingReview();
     }
-  }, [rentalId, session?.user?.id]);
+  }, [rentalId, session?.user?.id]);  
   
 
   const handleSubmit = async (e: React.FormEvent) => {
