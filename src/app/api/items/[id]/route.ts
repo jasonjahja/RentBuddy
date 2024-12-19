@@ -109,28 +109,28 @@ export async function PUT(req: Request) {
 
 export async function GET(req: Request) {
   try {
-    // Extract the 'id' parameter from the URL
     const url = new URL(req.url);
-    const id = url.pathname.split('/').pop(); // Extract the last part of the URL (assumes it's the ID)
+    const id = url.pathname.split('/').pop();
 
-    // Validate the 'id' parameter
     const itemId = parseInt(id || "", 10);
     if (isNaN(itemId)) {
       return NextResponse.json(
-        { error: "Invalid or missing item ID." },
+        { success: false, error: "Invalid or missing item ID." },
         { status: 400 }
       );
     }
 
-    // Fetch the item from the database
+    // Fetch item with reviews ordered by createdAt
     const item = await prisma.item.findUnique({
       where: { id: itemId },
       include: {
         itemReviews: {
+          orderBy: { createdAt: "desc" }, // Order reviews by newest first
           select: {
             id: true,
             rating: true,
             comment: true,
+            createdAt: true,
             renter: {
               select: { username: true },
             },
@@ -139,23 +139,24 @@ export async function GET(req: Request) {
       },
     });
 
-    // Handle item not found
     if (!item) {
       return NextResponse.json(
-        { error: "Item not found." },
+        { success: false, error: "Item not found." },
         { status: 404 }
       );
     }
 
-    // Return the item as JSON
-    return NextResponse.json(item, { status: 200 });
+    return NextResponse.json({
+      success: true,
+      data: item,
+    });
   } catch (err) {
     console.error("Error fetching item:", err);
 
-    // Handle server errors
     return NextResponse.json(
-      { error: "Internal server error." },
+      { success: false, error: "Internal server error." },
       { status: 500 }
     );
   }
 }
+

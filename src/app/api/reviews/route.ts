@@ -63,7 +63,7 @@ export async function POST(req: Request) {
     });
 
     if (existingReview) {
-      // Update the existing review
+      // Update the existing review (keep createdAt intact)
       const updatedReview = await prisma.itemReview.update({
         where: { id: existingReview.id },
         data: { rating, comment },
@@ -83,7 +83,7 @@ export async function POST(req: Request) {
         comment,
         rating,
         itemId,
-      },
+      }
     });
 
     return NextResponse.json({
@@ -92,13 +92,6 @@ export async function POST(req: Request) {
       data: newReview,
     });
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      console.error("Prisma error:", error.message);
-      return NextResponse.json(
-        { success: false, error: "Database error occurred." },
-        { status: 500 }
-      );
-    }
     console.error("Unexpected error:", error);
     return NextResponse.json(
       { success: false, error: "An unexpected error occurred." },
@@ -107,7 +100,6 @@ export async function POST(req: Request) {
   }
 }
 
-// GET: Fetch the review for a rental
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const rentalId = searchParams.get("rentalId");
@@ -122,12 +114,12 @@ export async function GET(req: Request) {
   }
 
   try {
-    // Fetch the rental details to get itemId and renterId
+    // Fetch rental details (includes item and user for renter info)
     const rental = await prisma.rental.findUnique({
       where: { id: parsedRentalId },
       include: {
-        item: true,
-        user: true, // Includes renter information
+        item: true, // Fetch item details
+        user: { select: { id: true, username: true } }, // Fetch user (renter) details
       },
     });
 
@@ -138,15 +130,20 @@ export async function GET(req: Request) {
       );
     }
 
-    // Use itemId and renterId from the rental to fetch the review
+    const { item, user } = rental;
+
     const existingReview = await prisma.itemReview.findFirst({
       where: {
-        renterId: rental.userId,
-        itemId: rental.itemId,
+        renterId: user.id,
+        itemId: item.id,
       },
-      include: {
+      select: {
+        id: true,
+        rating: true,
+        comment: true,
+        createdAt: true, // Include createdAt
         renter: {
-          select: { username: true }, // Include renter's username
+          select: { username: true },
         },
       },
     });
@@ -155,8 +152,11 @@ export async function GET(req: Request) {
       return NextResponse.json({
         success: true,
         data: {
-          ...existingReview,
-          renterName: existingReview.renter?.username || rental.user?.username || null,
+          id: existingReview.id,
+          rating: existingReview.rating,
+          comment: existingReview.comment,
+          createdAt: existingReview.createdAt, // Include createdAt
+          renterName: existingReview.renter?.username || user.username || null,
         },
       });
     }
@@ -166,13 +166,6 @@ export async function GET(req: Request) {
       { status: 404 }
     );
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      console.error("Prisma error:", error.message);
-      return NextResponse.json(
-        { success: false, error: "Database error occurred." },
-        { status: 500 }
-      );
-    }
     console.error("Unexpected error:", error);
     return NextResponse.json(
       { success: false, error: "An unexpected error occurred." },
@@ -180,6 +173,7 @@ export async function GET(req: Request) {
     );
   }
 }
+
 
 // PUT: Update an item review
 export async function PUT(req: Request) {
@@ -221,12 +215,8 @@ export async function PUT(req: Request) {
 
     if (!existingReview) {
       return NextResponse.json(
-        {
-          success: true, // Treat as a successful response
-          data: null,    // Indicate no data was found
-          message: "No review found for this rental.",
-        },
-        { status: 200 }  // Return 200 OK
+        { success: false, error: "Review not found for this rental." },
+        { status: 404 }
       );
     }
 
@@ -242,13 +232,6 @@ export async function PUT(req: Request) {
       data: updatedReview,
     });
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      console.error("Prisma error:", error.message);
-      return NextResponse.json(
-        { success: false, error: "Database error occurred." },
-        { status: 500 }
-      );
-    }
     console.error("Unexpected error:", error);
     return NextResponse.json(
       { success: false, error: "An unexpected error occurred." },

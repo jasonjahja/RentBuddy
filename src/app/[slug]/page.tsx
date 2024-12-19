@@ -8,6 +8,7 @@ import Image from "next/image";
 type Review = {
   comment: string;
   rating: number;
+  createdAt: Date;
   renter: {
     username: string;
   };
@@ -233,17 +234,26 @@ export default function ItemDetailPage() {
           <div className="h-96 overflow-y-auto bg-gray-100 rounded-md p-4">
             {filteredReviews && filteredReviews.length > 0 ? (
               <ul className="space-y-4">
-                {filteredReviews.map((review, index) => (
-                  <li key={index} className="bg-white p-4 rounded-md shadow">
-                    <p className="font-semibold">{review.renter?.username}</p>
-                    <p className="text-yellow-500">
-                      {"★".repeat(review.rating)}
-                      {"☆".repeat(5 - review.rating)}
-                    </p>
-                    <p className="text-gray-700">{review.comment}</p>
-                  </li>
-                ))}
-              </ul>
+              {filteredReviews.map((review, index) => (
+                <li key={index} className="bg-white p-4 rounded-md shadow">
+                  <p className="font-semibold">{review.renter?.username}</p>
+                  <p className="text-yellow-500">
+                    {"★".repeat(review.rating)}
+                    {"☆".repeat(5 - review.rating)}
+                  </p>
+                  <p className="text-gray-700">{review.comment}</p>
+                  <p className="text-sm text-gray-500 mt-2">
+                    Reviewed on: {new Date(review.createdAt).toLocaleDateString("en-GB", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
+                </li>
+              ))}
+            </ul>
             ) : (
               <p>No reviews available for the selected rating.</p>
             )}

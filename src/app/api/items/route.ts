@@ -92,6 +92,7 @@ export async function GET(req: Request) {
               id: true,
               rating: true,
               comment: true,
+              createdAt: true,
               renter: {
                 select: { username: true },
               },
@@ -120,6 +121,7 @@ export async function GET(req: Request) {
             id: true,
             rating: true,
             comment: true,
+            createdAt: true,
             renter: {
               select: { username: true },
             },

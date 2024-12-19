@@ -42,7 +42,7 @@ export default function LeaveReviewPage() {
           setIsEditMode(true);
         } else {
           console.log("No review found for this rental.");
-          setIsEditMode(false); // Ensure it allows creating a new review
+          setIsEditMode(false);
         }
         
       } catch (err) {
