@@ -38,64 +38,79 @@ export default function OwnerItemsPage() {
   }
 
   if (status === "loading") {
-    return <p>Loading session...</p>;
+    return <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <p className="text-xl font-semibold text-gray-600">Loading session...</p>
+    </div>;
   }
 
   if (status === "unauthenticated" || !session?.user?.id) {
-    return <p className="text-red-500">You must be logged in to view your items.</p>;
+    return <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <p className="text-xl font-semibold text-red-500">You must be logged in to view your items.</p>
+    </div>;
   }
 
   if (loading) {
-    return <p>Loading...</p>;
+    return <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <p className="text-xl font-semibold text-gray-600">Loading...</p>
+    </div>;
   }
 
   if (error) {
-    return <p className="text-red-500">{error}</p>;
+    return <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <p className="text-xl font-semibold text-red-500">{error}</p>
+    </div>;
   }
 
   return (
-    <main className="min-h-screen bg-gray-100 p-6">
-      <div className="max-w-5xl mx-auto bg-white shadow-lg rounded-lg p-6 mt-24">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Your Items</h1>
-          <button
-            onClick={() => router.push("/owner/add-item")}
-            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition"
-          >
-            + Add Item
-          </button>
-        </div>
-        {items.length === 0 ? (
-          <p>No items found.</p>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {items.map((item) => (
-              <Link key={item.id} href={`/${item.slug}`} className="block">
-                <div className="bg-white border rounded-lg p-4 shadow-md hover:shadow-lg transition">
-                  <Image
-                    src={item.url}
-                    alt={item.title}
-                    width={280}
-                    height={240}
-                    className="object-cover rounded-md mb-4"
-                  />
-                  <h2 className="text-xl font-semibold">{item.title}</h2>
-                  <p className="text-gray-600">{item.description}</p>
-                  <p className="text-blue-500 font-bold mt-2">
-                    Rp {item.price.toLocaleString("id-ID")}
-                  </p>
-                  <p
-                    className={`mt-2 ${
-                      item.isAvailable ? "text-green-500" : "text-red-500"
-                    }`}
-                  >
-                    {item.isAvailable ? "Available" : "Not Available"}
-                  </p>
-                </div>
-              </Link>
-            ))}
+    <main className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+        <div className="bg-white shadow-xl rounded-lg overflow-hidden mt-16">
+          <div className="px-4 py-5 sm:px-6 flex justify-between items-center border-b border-gray-200">
+            <h1 className="text-3xl font-bold text-gray-900">My Items</h1>
+            <button
+              onClick={() => router.push("/owner/add-item")}
+              className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+            >
+              Add New Item
+            </button>
           </div>
-        )}
+          <div className="px-4 py-5 sm:p-6">
+            {items.length === 0 ? (
+              <p className="text-center text-gray-500 text-xl">No items found.</p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {items.map((item) => (
+                  <Link key={item.id} href={`/${item.slug}`} className="block">
+                    <div className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition duration-300 ease-in-out transform hover:scale-105">
+                      <div className="relative h-48 w-full">
+                        <Image
+                          src={item.url}
+                          alt={item.title}
+                          layout="fill"
+                          objectFit="cover"
+                        />
+                      </div>
+                      <div className="p-4">
+                        <h2 className="text-xl font-semibold text-gray-900 mb-2 truncate">{item.title}</h2>
+                        <p className="text-gray-600 text-sm mb-2 h-12 overflow-hidden">{item.description}</p>
+                        <p className="text-blue-600 font-bold mb-2">
+                          Rp {item.price.toLocaleString("id-ID")} / day
+                        </p>
+                        <p
+                          className={`text-sm font-medium ${
+                            item.isAvailable ? "text-green-600" : "text-red-600"
+                          }`}
+                        >
+                          {item.isAvailable ? "Available" : "Not Available"}
+                        </p>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </main>
   );

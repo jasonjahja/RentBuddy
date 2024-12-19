@@ -145,7 +145,7 @@ export default function ItemDetailPage() {
         <button onClick={() => router.back()} className="flex items-center mb-8 text-gray-600 hover:text-gray-800 transition-colors duration-200">
           <i className="fas fa-angle-left mr-3"></i>
           <div className="text-xl text-gray-600">
-            Back to Browse
+            Back
           </div>
         </button>
 
@@ -153,7 +153,7 @@ export default function ItemDetailPage() {
         <div className="flex flex-col md:flex-row gap-12">
           {/* Image Section */}
           <div className="flex-1">
-            <div className="aspect-square relative rounded-lg overflow-hidden bg-gray-100">
+            <div className="aspect-square relative rounded-lg overflow-hidden bg-gray-100 w-full h-[32rem]">
               <Image
                 src={item.url}
                 alt={item.title}

@@ -1,16 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
+import Image from "next/image";
 
 export default function AddItem() {
   const [productName, setProductName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
-  const [recommendedPrice, setRecommendedPrice] = useState<number | null>(null); // Recommended price
+  const [recommendedPrice, setRecommendedPrice] = useState<number | null>(null);
   const [category, setCategory] = useState("");
   const [categories, setCategories] = useState<string[]>(["Outdoor", "Electronics", "Home", "Transport"]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState("");
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,13 +33,19 @@ export default function AddItem() {
       return;
     }
 
+    if (!imagePreview) {
+      setMessage("Error: Please upload an image for the product.");
+      setIsSubmitting(false);
+      return;
+    }
+
     const newItem = {
       title: productName.trim(),
       description: description.trim(),
       price: numericPrice,
       category,
       isAvailable: true,
-      url: "/images/bike.webp", // Default image
+      url: imagePreview,
     };
 
     try {
@@ -54,7 +63,11 @@ export default function AddItem() {
         setDescription("");
         setPrice("");
         setCategory("");
-        setRecommendedPrice(null); // Reset recommended price
+        setRecommendedPrice(null);
+        setImagePreview(null);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
       } else {
         const errorData = await response.json();
         setMessage(`Error: ${errorData.error || "Unable to add product."}`);
@@ -71,7 +84,6 @@ export default function AddItem() {
     const selectedCategory = e.target.value;
     setCategory(selectedCategory);
 
-    // Fetch the recommended price for the selected category
     if (selectedCategory) {
       try {
         const response = await fetch(`/api/recommendations?category=${selectedCategory}`);
@@ -92,21 +104,21 @@ export default function AddItem() {
 
   const handleCategoryInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCategory(e.target.value.trim());
-    setRecommendedPrice(null); // Reset recommended price when adding a new category
+    setRecommendedPrice(null);
   };
 
   const handleAddCategory = () => {
     if (category && !categories.includes(category)) {
       setCategories((prevCategories) => [...prevCategories, category]);
-      setCategory(""); // Clear input after adding
+      setCategory("");
     } else if (!category) {
       setMessage("Error: Please enter a valid category.");
     }
   };
 
   const formatIDR = (value: string) => {
-    const numericValue = value.replace(/[^\d]/g, ""); // Remove non-numeric characters
-    return numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, "."); // Add thousands separator
+    const numericValue = value.replace(/[^\d]/g, "");
+    return numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   };
 
   const handlePriceInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -114,21 +126,108 @@ export default function AddItem() {
     setPrice(formattedPrice ? `Rp ${formattedPrice}` : "");
   };
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-      <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-lg my-12 mt-24">
-        <h1 className="text-2xl font-bold text-center mb-6">Add New Product</h1>
+    <div className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="mx-12 mt-20">
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">Add New Product</h1>
         {message && (
-          <p
-            className={`text-center mb-4 ${
-              message.startsWith("Error") ? "text-red-500" : "text-green-500"
-            }`}
-          >
+          <div className={`mb-4 p-4 rounded-md ${message.startsWith("Error") ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
             {message}
-          </p>
+          </div>
         )}
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
+        <form onSubmit={handleSubmit} className="flex flex-col md:flex-row gap-8">
+          <div className="md:w-1/2 flex items-stretc">
+            <div
+            className={`w-full mb-6 flex flex-col justify-center ${
+              imagePreview ? "h-60" : "h-full"
+            }`}
+            >
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Product Image
+              </label>
+              <div
+                className={`mt-1 flex justify-center px-6 py-16 border-2 border-gray-300 border-dashed rounded-md h-full ${
+                  imagePreview ? "bg-gray-50" : ""
+                }`}
+                onDragOver={(e) => e.preventDefault()} // Allow dropping
+                onDrop={(e) => {
+                  e.preventDefault();
+                  if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                    const file = e.dataTransfer.files[0];
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                      setImagePreview(reader.result as string);
+                    };
+                    reader.readAsDataURL(file);
+                
+                    // Clear the DataTransfer object
+                    e.dataTransfer.clearData();
+                  }
+                }}
+              >
+                <div className="space-y-1 text-center">
+                  {imagePreview ? (
+                    <Image
+                      src={imagePreview}
+                      alt="Product preview"
+                      width={300}
+                      height={300}
+                      className="mx-auto h-60 w-60 object-cover rounded-md"
+                    />
+                  ) : (
+                    <>
+                      <svg
+                        className="mx-auto h-12 w-12 text-gray-400"
+                        stroke="currentColor"
+                        fill="none"
+                        viewBox="0 0 48 48"
+                        aria-hidden="true"
+                      >
+                        <path
+                          d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                          strokeWidth={2}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                      <div className="text-gray-600 flex">
+                        <label
+                          htmlFor="file-upload"
+                          className="relative cursor-pointer rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
+                        >
+                          <span>Upload a file</span>
+                          <input
+                            id="file-upload"
+                            name="file-upload"
+                            type="file"
+                            className="sr-only"
+                            onChange={handleImageUpload}
+                            ref={fileInputRef}
+                            accept="image/*"
+                          />
+                        </label>
+                        <p className="ml-1">or drag and drop your file here</p>
+                      </div>
+                      <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="md:w-1/2 flex flex-col justify-between space-y-6">
+          <div>
             <label htmlFor="productName" className="block text-sm font-medium text-gray-700">
               Product Name
             </label>
@@ -138,87 +237,92 @@ export default function AddItem() {
               value={productName}
               onChange={(e) => setProductName(e.target.value)}
               required
-              className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter product name"
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
             />
           </div>
-          <div className="mb-4">
-            <label htmlFor="category" className="block text-sm font-medium text-gray-700">
-              Category
-            </label>
-            <div className="flex gap-2">
-              <select
-                id="category"
-                value={category}
-                onChange={handleCategoryChange}
-                className="w-2/3 border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Select a category</option>
-                {categories.map((cat, index) => (
-                  <option key={index} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
+            <div>
+              <label htmlFor="category" className="block text-sm font-medium text-gray-700">
+                Category
+              </label>
+              <div className="mt-1 flex rounded-md shadow-sm">
+                <select
+                  id="category"
+                  value={category}
+                  onChange={handleCategoryChange}
+                  className="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-l-md focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300"
+                >
+                  <option value="">Select a category</option>
+                  {categories.map((cat, index) => (
+                    <option key={index} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  placeholder="New category"
+                  value={category}
+                  onChange={handleCategoryInput}
+                  className="flex-1 min-w-0 block w-full px-3 py-2 rounded-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300"
+                />
+                <button
+                  type="button"
+                  onClick={handleAddCategory}
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-r-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  Add
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="price" className="block text-sm font-medium text-gray-700">
+                Price per Day (in IDR)
+              </label>
               <input
+                id="price"
                 type="text"
-                placeholder="Add new category"
-                value={category}
-                onChange={handleCategoryInput}
-                className="w-1/3 border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={price}
+                onChange={handlePriceInput}
+                required
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
               />
+              {recommendedPrice && (
+                <p className="mt-2 text-sm text-gray-500">
+                  Recommended Price: Rp {recommendedPrice.toLocaleString("id-ID")}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+                Description
+              </label>
+              <textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                required
+                rows={3}
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              />
+            </div>
+
+            <div>
               <button
-                type="button"
-                onClick={handleAddCategory}
-                className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition"
+                type="submit"
+                disabled={isSubmitting}
+                className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+                  isSubmitting ? "opacity-50 cursor-not-allowed" : ""
+                }`}
               >
-                Add
+                {isSubmitting ? "Adding..." : "Add Product"}
               </button>
             </div>
           </div>
-          <div className="mb-4">
-            <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-              Description
-            </label>
-            <textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              required
-              className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter product description"
-            />
-          </div>
-          <div className="mb-4">
-            <label htmlFor="price" className="block text-sm font-medium text-gray-700">
-              Price per Day (in IDR)
-            </label>
-            <input
-              id="price"
-              type="text"
-              value={price}
-              onChange={handlePriceInput}
-              required
-              className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter price"
-            />
-            {recommendedPrice && (
-              <p className="text-sm text-gray-500 mt-2">
-                Recommended Price: Rp {recommendedPrice.toLocaleString("id-ID")}
-              </p>
-            )}
-          </div>
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className={`w-full bg-blue-500 text-white py-2 px-4 rounded-md transition ${
-              isSubmitting ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-600"
-            }`}
-          >
-            {isSubmitting ? "Adding..." : "Add Product"}
-          </button>
         </form>
       </div>
-    </main>
+    </div>
   );
 }
+

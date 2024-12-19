@@ -145,14 +145,14 @@ export default function OwnerHistoryPage() {
       <div className="mx-24 px-4 sm:px-6 lg:px-8 mt-16">
         <div className="sm:flex sm:items-center">
           <div className="sm:flex-auto">
-            <h1 className="text-2xl font-semibold text-gray-900">Rental History (Owner)</h1>
+            <h1 className="text-2xl font-semibold text-gray-900">Rental History</h1>
             <p className="mt-2 text-gray-700">
               A list of all rentals for your items, including renter details and rental period.
             </p>
           </div>
         </div>
 
-        <div className="mt-6 bg-white">
+        <div className="mt-8 bg-white">
           {/* Filters */}
           <div className="flex items-center gap-4 mb-4">
             <input

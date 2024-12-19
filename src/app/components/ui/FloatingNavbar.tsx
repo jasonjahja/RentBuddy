@@ -29,20 +29,19 @@ export const FloatingNav = ({
 
   const sessionLink =
     status === "loading" ? (
-      <span className="text-sm font-medium text-gray-500">Loading...</span>
+      <span className=" font-medium text-gray-500">Loading...</span>
     ) : session?.user ? (
       <Link
         href="/profile"
-        className="border text-sm font-medium relative border-neutral-200 dark:border-white/[0.2] text-black dark:text-white px-4 py-2 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-900 transition-colors"
+        className="relative flex items-center justify-center bg-blue-500 text-white w-10 h-10 rounded-full font-bold"
         aria-label="Profile"
       >
-        <span>Profile</span>
-        <span className="absolute inset-x-0 w-1/2 mx-auto -bottom-px bg-gradient-to-r from-transparent via-green-500 to-transparent h-px" />
+        {session?.user?.username?.[0].toUpperCase() || "P"}
       </Link>
     ) : (
       <Link
         href="/auth/login"
-        className="border text-sm font-medium relative border-neutral-200 dark:border-white/[0.2] text-black dark:text-white px-4 py-2 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-900 transition-colors"
+        className="bg-blue-500 text-white  font-medium px-4 py-2 rounded-full hover:bg-blue-600 transition-colors"
         aria-label="Login"
       >
         <span>Login</span>
@@ -78,7 +77,7 @@ export const FloatingNav = ({
             <Link
               key={`link-${idx}`}
               href={navItem.link || "/"}
-              className="relative text-sm font-medium text-neutral-600 dark:text-neutral-50 hover:text-neutral-900 dark:hover:text-neutral-300 transition-colors"
+              className="relative  font-medium text-neutral-600 dark:text-neutral-50 hover:text-neutral-900 dark:hover:text-neutral-300 transition-colors"
               aria-label={navItem.name}
             >
               {navItem.name}

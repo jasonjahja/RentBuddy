@@ -30,6 +30,13 @@ export async function DELETE(req: Request) {
       );
     }
 
+    await prisma.itemReview.deleteMany({
+      where: { itemId },
+    });
+    await prisma.rental.deleteMany({
+      where: { itemId },
+    });
+
     // Delete the item from the database
     await prisma.item.delete({
       where: { id: itemId },
