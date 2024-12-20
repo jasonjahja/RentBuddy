@@ -149,9 +149,7 @@ export default function AddItem() {
         <form onSubmit={handleSubmit} className="flex flex-col md:flex-row gap-8">
           <div className="md:w-1/2 flex items-stretc">
             <div
-            className={`w-full mb-6 flex flex-col justify-center ${
-              imagePreview ? "h-60" : "h-full"
-            }`}
+            className={`w-full mb-6 flex flex-col justify-center h-full`}
             >
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Product Image
@@ -201,7 +199,10 @@ export default function AddItem() {
                           strokeLinejoin="round"
                         />
                       </svg>
-                      <div className="text-gray-600 flex">
+                      
+                    </>
+                  )}
+                  <div className="text-gray-600 flex">
                         <label
                           htmlFor="file-upload"
                           className="relative cursor-pointer rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
@@ -220,8 +221,6 @@ export default function AddItem() {
                         <p className="ml-1">or drag and drop your file here</p>
                       </div>
                       <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
-                    </>
-                  )}
                 </div>
               </div>
             </div>

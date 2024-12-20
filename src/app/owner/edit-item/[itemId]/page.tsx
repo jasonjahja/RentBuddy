@@ -27,36 +27,61 @@ export default function EditItemPage() {
   const [success, setSuccess] = useState<boolean>(false);
 
   useEffect(() => {
+    let isMounted = true; // Add mounted check
+
     async function fetchItemDetails() {
+      if (!itemId) return;
+      
       try {
         const response = await fetch(`/api/items/${itemId}`);
-        if (!response.ok) throw new Error("Failed to fetch item details");
+        if (!response.ok) {
+          throw new Error(`Failed to fetch item details: ${response.statusText}`);
+        }
   
         const data = await response.json();
         console.log("Fetched item details:", data);
   
-        setTitle(data?.title || "");
-        setDescription(data?.description || "");
-        setPrice(formatIDR(String(data?.price || 0)));
-        setCategory(data?.category || "");
-        setIsAvailable(data?.isAvailable ?? true); // Default to true if undefined
-        setImagePreview(data?.url || null);
-  
-        // Update categories if the item's category is not in the list
-        if (data?.category && !categories.includes(data.category)) {
-          setCategories((prevCategories) => [...prevCategories, data.category]);
+        // Only update state if component is still mounted
+        if (isMounted) {
+          if (data) {
+            // Directly access properties with type checking
+            setTitle(typeof data.title === 'string' ? data.title : '');
+            setDescription(typeof data.description === 'string' ? data.description : '');
+            setPrice(typeof data.price === 'number' ? formatIDR(data.price.toString()) : 'Rp 0');
+            setCategory(typeof data.category === 'string' ? data.category : '');
+            setIsAvailable(typeof data.isAvailable === 'boolean' ? data.isAvailable : true);
+            setImagePreview(typeof data.url === 'string' ? data.url : null);
+
+            // Update categories if needed
+            if (data.category && typeof data.category === 'string' && !categories.includes(data.category)) {
+              setCategories(prev => [...prev, data.category]);
+            }
+          }
         }
       } catch (err) {
         console.error("Error fetching item details:", err);
-        setError("Failed to load item details.");
+        if (isMounted) {
+          setError(err instanceof Error ? err.message : "Failed to load item details.");
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     }
-  
-    if (itemId) fetchItemDetails();
-  }, [itemId, categories]);
-  
+
+    fetchItemDetails();
+
+    // Cleanup function to prevent memory leaks
+    return () => {
+      isMounted = false;
+    };
+  }, [itemId]); // Remove categories from dependency array
+
+  const formatIDR = (value: string) => {
+    const numericValue = value.replace(/[^\d]/g, "");
+    return `Rp ${numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,7 +90,7 @@ export default function EditItemPage() {
       return;
     }
 
-    const numericPrice = parseFloat(price.replace(/[^\d]/g, "")); // Convert formatted price back to a number
+    const numericPrice = parseFloat(price.replace(/[^\d]/g, ""));
 
     try {
       const response = await fetch(`/api/items/${itemId}`, {
@@ -81,18 +106,18 @@ export default function EditItemPage() {
         }),
       });
 
-      if (!response.ok) throw new Error("Failed to update item");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Failed to update item");
+      }
 
       setSuccess(true);
-      setTimeout(() => router.push("/"), 2000); // Redirect after success
+      // Use router.push instead of setTimeout to avoid race conditions
+      router.push("/");
     } catch (err) {
-      setError((err as Error).message);
+      console.error("Error updating item:", err);
+      setError(err instanceof Error ? err.message : "Failed to update item");
     }
-  };
-
-  const formatIDR = (value: string) => {
-    const numericValue = value.replace(/[^\d]/g, ""); // Remove non-numeric characters
-    return `Rp ${numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`; // Format with thousands separator
   };
 
   const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -101,7 +126,7 @@ export default function EditItemPage() {
 
   const handleAddCategory = () => {
     if (category && !categories.includes(category)) {
-      setCategories(prevCategories => [...prevCategories, category]);
+      setCategories(prev => [...prev, category]);
     }
   };
 
@@ -130,11 +155,7 @@ export default function EditItemPage() {
         )}
         <form onSubmit={handleSubmit} className="flex flex-col md:flex-row gap-8">
           <div className="md:w-1/2 flex items-stretch">
-            <div
-              className={`w-full mb-6 flex flex-col justify-center ${
-                imagePreview ? "h-60" : "h-full"
-              }`}
-            >
+            <div className="w-full mb-6 flex flex-col justify-center h-full">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Product Image
               </label>
@@ -181,26 +202,26 @@ export default function EditItemPage() {
                           strokeLinejoin="round"
                         />
                       </svg>
-                      <div className="text-gray-600 flex">
-                        <label
-                          htmlFor="file-upload"
-                          className="relative cursor-pointer rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
-                        >
-                          <span>Upload a file</span>
-                          <input
-                            id="file-upload"
-                            name="file-upload"
-                            type="file"
-                            className="sr-only"
-                            onChange={handleImageUpload}
-                            accept="image/*"
-                          />
-                        </label>
-                        <p className="ml-1">or drag and drop your file here</p>
-                      </div>
-                      <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
                     </>
                   )}
+                  <div className="text-gray-600 flex">
+                    <label
+                      htmlFor="file-upload"
+                      className="relative cursor-pointer rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
+                    >
+                      <span>Upload a file</span>
+                      <input
+                        id="file-upload"
+                        name="file-upload"
+                        type="file"
+                        className="sr-only"
+                        onChange={handleImageUpload}
+                        accept="image/*"
+                      />
+                    </label>
+                    <p className="ml-1">or drag and drop your file here</p>
+                  </div>
+                  <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
                 </div>
               </div>
             </div>
@@ -295,13 +316,13 @@ export default function EditItemPage() {
               <button
                 type="button"
                 onClick={() => router.back()}
-                className="py-2 px-4 border border-transparent text-sm font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="py-2 px-4 w-full border border-transparent text-sm font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="py-2 px-4 w-full border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
                 Save Changes
               </button>

@@ -33,7 +33,7 @@ export const FloatingNav = ({
     ) : session?.user ? (
       <Link
         href="/profile"
-        className="relative flex items-center justify-center bg-blue-500 text-white w-10 h-10 rounded-full font-bold"
+        className="relative flex items-center justify-center bg-black text-white w-10 h-10 rounded-full font-bold"
         aria-label="Profile"
       >
         {session?.user?.username?.[0].toUpperCase() || "P"}
