@@ -20,7 +20,7 @@ export async function POST(req: Request) {
       !comment
     ) {
       return NextResponse.json(
-        { error: "Missing required fields." },
+        { error: "Missing required fields (renterId, ownerId, rentalId, trustScore, comment)" },
         { status: 400 }
       );
     }

@@ -33,7 +33,7 @@ export async function POST(req: Request) {
       return NextResponse.json(
         {
           success: false,
-          error: "Invalid input. Ensure all fields are provided and valid.",
+          error: "Invalid input. Ensure all fields (renterId, rentalId, rating, comment) are provided and valid.",
         },
         { status: 400 }
       );

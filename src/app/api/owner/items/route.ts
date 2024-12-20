@@ -52,35 +52,36 @@ export async function POST(req: Request) {
 
 export async function GET(req: Request) {
   try {
-    const { searchParams } = new URL(req.url);
-    const slug = searchParams.get("slug");
+    const session = await auth()
 
-    if (slug) {
-      const item = await prisma.item.findUnique({
-        where: { slug },
-        include: { itemReviews: true },
-      });
+    if (!session || !session.user) {
+      return NextResponse.json(
+        { error: "Unauthorized. Please log in." },
+        { status: 401 }
+      )
+    }
 
-      if (!item) {
-        return NextResponse.json(
-          { error: "Item not found" },
-          { status: 404 }
-        );
-      }
+    const userId = session.user.id
 
-      return NextResponse.json(item, { status: 200 });
+    if (!userId) {
+      return NextResponse.json(
+        { error: "User ID not found in session" },
+        { status: 400 }
+      )
     }
 
     const items = await prisma.item.findMany({
+      where: { ownerId: Number(userId) },
       include: { itemReviews: true },
-    });
+    })
 
-    return NextResponse.json(items, { status: 200 });
+    return NextResponse.json(items, { status: 200 })
   } catch (error) {
-    console.error("Error fetching items:", error);
+    console.error("Error fetching owner items:", error)
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
-    );
+    )
   }
 }
+
