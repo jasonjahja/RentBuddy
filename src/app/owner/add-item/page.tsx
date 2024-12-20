@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export default function AddItem() {
   const [productName, setProductName] = useState("");
@@ -14,6 +15,7 @@ export default function AddItem() {
   const [message, setMessage] = useState("");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,6 +70,7 @@ export default function AddItem() {
         if (fileInputRef.current) {
           fileInputRef.current.value = "";
         }
+        router.push("/");
       } else {
         const errorData = await response.json();
         setMessage(`Error: ${errorData.error || "Unable to add product."}`);

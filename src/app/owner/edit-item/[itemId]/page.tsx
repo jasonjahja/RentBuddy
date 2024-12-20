@@ -38,23 +38,23 @@ export default function EditItemPage() {
           throw new Error(`Failed to fetch item details: ${response.statusText}`);
         }
   
-        const data = await response.json();
-        console.log("Fetched item details:", data);
+        const result = await response.json();
+        console.log("Fetched item details:", result);
   
         // Only update state if component is still mounted
         if (isMounted) {
-          if (data) {
+          if (result) {
             // Directly access properties with type checking
-            setTitle(typeof data.title === 'string' ? data.title : '');
-            setDescription(typeof data.description === 'string' ? data.description : '');
-            setPrice(typeof data.price === 'number' ? formatIDR(data.price.toString()) : 'Rp 0');
-            setCategory(typeof data.category === 'string' ? data.category : '');
-            setIsAvailable(typeof data.isAvailable === 'boolean' ? data.isAvailable : true);
-            setImagePreview(typeof data.url === 'string' ? data.url : null);
+            setTitle(typeof result.data.title === 'string' ? result.data.title : '');
+            setDescription(typeof result.data.description === 'string' ? result.data.description : '');
+            setPrice(typeof result.data.price === 'number' ? formatIDR(result.data.price.toString()) : 'Rp 0');
+            setCategory(typeof result.data.category === 'string' ? result.data.category : '');
+            setIsAvailable(typeof result.data.isAvailable === 'boolean' ? result.data.isAvailable : true);
+            setImagePreview(typeof result.data.url === 'string' ? result.data.url : null);
 
             // Update categories if needed
-            if (data.category && typeof data.category === 'string' && !categories.includes(data.category)) {
-              setCategories(prev => [...prev, data.category]);
+            if (result.data.category && typeof result.data.category === 'string' && !categories.includes(result.data.category)) {
+              setCategories(prev => [...prev, result.data.category]);
             }
           }
         }
