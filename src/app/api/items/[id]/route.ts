@@ -9,9 +9,18 @@ const globalForPrisma = global as unknown as { prisma: PrismaClient };
 const prisma = globalForPrisma.prisma || new PrismaClient();
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 
+type ItemInput = {
+  title: string;
+  description: string;
+  price: number;
+  category: string;
+  isAvailable: boolean;
+  url: string;
+};
+
 // Helper function for input validation
-function validateItemInput(data: any) {
-  const errors = [];
+function validateItemInput(data: ItemInput): string[] {
+  const errors: string[] = [];
   if (!data.title || typeof data.title !== 'string' || data.title.trim() === '') {
     errors.push("Title is required and must be a non-empty string");
   }
@@ -33,15 +42,15 @@ function validateItemInput(data: any) {
   return errors;
 }
 
-export async function DELETE(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(req: Request) {
   try {
-    const itemId = parseInt(params.id, 10);
-    if (isNaN(itemId)) {
+    const body = await req.json(); // Parse the request body
+    const { itemId } = body; // Extract itemId from the request body
+
+    // Validate itemId
+    if (!itemId || isNaN(itemId)) {
       return NextResponse.json(
-        { error: "Invalid item ID. Must be a valid number." },
+        { error: "Invalid or missing item ID. Must be a valid number." },
         { status: 400 }
       );
     }
@@ -61,7 +70,7 @@ export async function DELETE(
       await tx.itemReview.deleteMany({
         where: { itemId },
       });
-      
+
       await tx.rental.deleteMany({
         where: { itemId },
       });
@@ -72,73 +81,72 @@ export async function DELETE(
       });
     });
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       success: true,
-      message: "Item deleted successfully." 
+      message: "Item deleted successfully.",
     });
   } catch (error) {
     console.error("Error deleting item:", error);
-    
+
     if (error instanceof Error && error.message === "Item not found") {
       return NextResponse.json(
-        { success: false, error: "Item not found. It may have already been deleted." },
+        {
+          success: false,
+          error: "Item not found. It may have already been deleted.",
+        },
         { status: 404 }
       );
     }
 
     return NextResponse.json(
-      { success: false, error: "Failed to delete item. Please try again later." },
+      {
+        success: false,
+        error: "Failed to delete item. Please try again later.",
+      },
       { status: 500 }
     );
   }
 }
 
-export async function PUT(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
+
+export async function PUT(req: Request) {
   try {
-    const itemId = parseInt(params.id, 10);
-    if (isNaN(itemId)) {
+    const body = await req.json();
+    const { itemId, ...updateData }: ItemInput & { itemId: number } = body;
+
+    if (!itemId || isNaN(itemId)) {
       return NextResponse.json(
-        { success: false, error: "Invalid item ID." },
+        { success: false, error: "Invalid or missing item ID." },
         { status: 400 }
       );
     }
 
-    const body = await req.json();
-    
     // Validate input
-    const validationErrors = validateItemInput(body);
+    const validationErrors = validateItemInput(updateData);
     if (validationErrors.length > 0) {
       return NextResponse.json(
         { success: false, errors: validationErrors },
         { status: 400 }
       );
     }
-    
+
     // Generate slug from title
-    const slug = body.title
+    const slug = updateData.title
       .toLowerCase()
       .replace(/\s+/g, "-")
       .replace(/[^\w-]+/g, "");
 
     const updatedItem = await prisma.item.update({
-      where: { id: itemId },
+      where: { id: parseInt(String(itemId), 10) },
       data: {
-        title: body.title,
-        description: body.description,
-        price: body.price,
-        category: body.category,
-        isAvailable: body.isAvailable,
-        url: body.url,
+        ...updateData,
         slug,
       },
     });
 
-    return NextResponse.json({ 
-      success: true, 
-      data: updatedItem 
+    return NextResponse.json({
+      success: true,
+      data: updatedItem,
     });
   } catch (error) {
     console.error("Error updating item:", error);
@@ -150,21 +158,21 @@ export async function PUT(
   }
 }
 
-export async function GET(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
+
+export async function GET(req: Request) {
   try {
-    const itemId = parseInt(params.id, 10);
-    if (isNaN(itemId)) {
+    const body = await req.json();
+    const { itemId } = body;
+
+    if (!itemId || isNaN(itemId)) {
       return NextResponse.json(
-        { success: false, error: "Invalid item ID." },
+        { success: false, error: "Invalid or missing item ID." },
         { status: 400 }
       );
     }
 
     const item = await prisma.item.findUnique({
-      where: { id: itemId },
+      where: { id: parseInt(itemId, 10) },
       include: {
         itemReviews: {
           orderBy: { createdAt: "desc" },
@@ -200,4 +208,3 @@ export async function GET(
     );
   }
 }
-
