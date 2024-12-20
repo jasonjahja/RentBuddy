@@ -4,6 +4,12 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 
+interface RenterInfo {
+  username: string;
+  email: string;
+  trust_score: number;
+}
+
 export default function ReviewRenterPage() {
   const router = useRouter();
   const params = useParams();
@@ -18,6 +24,7 @@ export default function ReviewRenterPage() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [success, setSuccess] = useState<boolean>(false);
+  const [renterInfo, setRenterInfo] = useState<RenterInfo | null>(null);
 
   useEffect(() => {
     const rentalIdRaw = params?.rentalId;
@@ -29,16 +36,24 @@ export default function ReviewRenterPage() {
     }
     setRentalId(parseInt(validRentalId, 10));
   
-    // Function to fetch renterId and review after session has loaded
     async function fetchRenterAndReview(ownerId: number) {
       try {
-        // Fetch rental details to get renterId
         const rentalResponse = await fetch(`/api/rentals/${validRentalId}`);
         if (rentalResponse.ok) {
           const rentalData = await rentalResponse.json();
-          setRenterId(rentalData.data.userId);
+          const rental = rentalData.data;
   
-          // Fetch existing review if available
+          // Fetch renter information
+          if (rental?.user) {
+            const renter = rental.user;
+            setRenterId(renter.id); // Assuming `id` is the renter ID
+            setRenterInfo({
+              username: renter.username,
+              email: renter.email,
+              trust_score: renter.trust_score,
+            });
+          }
+  
           const reviewResponse = await fetch(
             `/api/reviews/renter?rentalId=${validRentalId}&renterId=${rentalData.data.userId}&ownerId=${ownerId}`
           );
@@ -59,19 +74,17 @@ export default function ReviewRenterPage() {
       }
     }
   
-    // Fetch session to get ownerId
     if (session?.user?.id) {
       const ownerId = Number(session.user.id);
       if (!isNaN(ownerId)) {
         setOwnerId(ownerId);
-        fetchRenterAndReview(ownerId); // Only call fetch after ownerId is set
+        fetchRenterAndReview(ownerId);
       } else {
         setError("Invalid owner ID format.");
       }
     }
   }, [params, session]);
   
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!rentalId || !ownerId || !renterId) {
@@ -111,7 +124,10 @@ export default function ReviewRenterPage() {
   if (error) {
     return (
       <main className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="text-red-500">{error}</div>
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative w-full max-w-md" role="alert">
+          <strong className="font-bold">Error: </strong>
+          <span className="block sm:inline">{error}</span>
+        </div>
       </main>
     );
   }
@@ -119,50 +135,103 @@ export default function ReviewRenterPage() {
   if (success) {
     return (
       <main className="min-h-screen flex items-center justify-center bg-gray-100">
-        <p className="text-green-500">Review submitted successfully! Redirecting...</p>
+        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative w-full max-w-md" role="alert">
+          <strong className="font-bold">Success: </strong>
+          <span className="block sm:inline">Review submitted successfully! Redirecting...</span>
+        </div>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="w-full max-w-md bg-white p-6 rounded-lg shadow">
-        <h1 className="text-2xl font-bold mb-6 text-center">Review Renter</h1>
-        <form onSubmit={handleSubmit}>
-          <div>
-            <label className="block text-gray-700">Trust Score (0-100)</label>
-            <input
-              type="number"
-              min="0"
-              max="100"
-              value={trustScore}
-              onChange={(e) => setTrustScore(Math.max(0, Math.min(100, Number(e.target.value))))}
-              className="w-full border rounded px-4 py-2"
-            />
+    <main className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
+      <div className="bg-white shadow-md rounded-lg w-full max-w-4xl overflow-hidden">
+        <div className="bg-black text-white p-4 rounded-t-lg">
+          <h1 className="text-2xl font-bold flex items-center">
+            <span className="mr-4 text-yellow-400"><i className="fas fa-star"></i></span>
+            Review Renter
+          </h1>
+        </div>
+        <div className="flex flex-col md:flex-row">
+          {/* Renter Information */}
+          <div className="md:w-1/3 bg-gray-50 p-6 border-r border-gray-200">
+            <h2 className="text-xl font-semibold mb-4">Renter Information</h2>
+            {renterInfo ? (
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm text-gray-600">Name</p>
+                  <p className="font-medium">{renterInfo.username}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Email</p>
+                  <p className="font-medium">{renterInfo.email}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Current Trust Score</p>
+                  <p className="font-medium">{renterInfo.trust_score}</p>
+                </div>
+              </div>
+            ) : (
+              <p className="text-gray-500">Loading renter information...</p>
+            )}
           </div>
-          <div>
-            <label className="block text-gray-700">Comment</label>
-            <textarea
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              className="w-full border rounded px-4 py-2"
-              rows={4}
-              required
-            />
+          {/* Review Form */}
+          <div className="md:w-2/3 p-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Trust Score</label>
+                <div className="flex items-center space-x-4">
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={trustScore}
+                    onChange={(e) => setTrustScore(Number(e.target.value))}
+                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                  />
+                  <span className="text-lg font-semibold text-black">{trustScore}</span>
+                </div>
+              </div>
+              <div>
+                <label htmlFor="comment" className="block text-sm font-medium text-gray-700 mb-2">
+                  Comment
+                </label>
+                <textarea
+                  id="comment"
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  className="w-full border rounded-lg px-4 py-2 focus:ring-black focus:border-black"
+                  rows={4}
+                  required
+                  placeholder="Share your experience with this renter..."
+                />
+              </div>
+              <div className="flex justify-end">
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className={`px-6 py-2 rounded-full text-white transition-all duration-200 ease-in-out transform hover:scale-105 ${
+                    isSubmitting ? "bg-gray-400" : "bg-black hover:bg-gray-800"
+                  }`}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <span className="mr-2">🔄</span>
+                      Submitting...
+                    </>
+                  ) : (
+                    <>
+                      <span className="mr-2">✉️</span>
+                      Submit Review
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
-          <div className="flex justify-end mt-4">
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className={`px-4 py-2 rounded text-white ${
-                isSubmitting ? "bg-blue-300" : "bg-blue-500 hover:bg-blue-600"
-              }`}
-            >
-              {isSubmitting ? "Submitting..." : "Submit"}
-            </button>
-          </div>
-        </form>
+        </div>
       </div>
     </main>
   );
 }
+

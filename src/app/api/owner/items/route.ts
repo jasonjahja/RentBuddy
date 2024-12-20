@@ -34,7 +34,7 @@ export async function POST(req: Request) {
         price,
         category,
         isAvailable: isAvailable ?? true,
-        url: url ?? "/images/default.png",
+        url: url ?? "/images/bike.png",
         slug,
         owner: { connect: { id: Number(session.user.id) } },
       },

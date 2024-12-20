@@ -52,7 +52,7 @@ export async function POST(req: Request) {
         price: Number(price), // Ensure price is stored as a number
         category,
         isAvailable: isAvailable ?? true,
-        url: url || "/images/default.png", // Use fallback image URL
+        url: url || "/images/bike.png", // Use fallback image URL
         slug,
         owner: { connect: { id: Number(session.user.id) } }, // Assign the owner
       },

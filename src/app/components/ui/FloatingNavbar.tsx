@@ -51,7 +51,7 @@ export const FloatingNav = ({
 
   return (
     <div
-      className={`fixed top-0 inset-x-0 mx-auto z-[5000] bg-white dark:bg-black border-b border-neutral-200 dark:border-white/[0.2] shadow-md px-8 py-4 flex justify-between items-center ${className}`}
+      className={`fixed top-0 inset-x-0 mx-auto z-[5000] bg-white border-b border-neutral-200 shadow-md px-8 py-4 flex justify-between items-center ${className}`}
     >
       {/* Left Section (Logo) */}
       <div className="flex items-center space-x-4">
@@ -64,7 +64,7 @@ export const FloatingNav = ({
             className="object-contain"
             onError={(e) => (e.currentTarget.src = "/images/default-logo.png")}
           />
-          <span className="text-xl font-semibold text-black dark:text-white">
+          <span className="text-xl font-semibold text-black ">
             RentBuddy
           </span>
         </Link>
@@ -77,7 +77,7 @@ export const FloatingNav = ({
             <Link
               key={`link-${idx}`}
               href={navItem.link || "/"}
-              className="relative  font-medium text-neutral-600 dark:text-neutral-50 hover:text-neutral-900 dark:hover:text-neutral-300 transition-colors"
+              className="relative  font-medium text-neutral-600 hover:text-neutral-900 transition-colors"
               aria-label={navItem.name}
             >
               {navItem.name}
